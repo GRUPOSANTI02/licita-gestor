@@ -2,15 +2,13 @@
 
 import { useMemo } from "react";
 
-import { TenderCard } from "@/components/features/TenderCard";
 import { useTenders } from "@/context/TenderContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ArrowUpRight, TrendingUp, Users, AlertCircle, Plus, Clock, MapPin, FileText } from "lucide-react";
+import { ArrowUpRight, TrendingUp, Users, AlertCircle, Plus, Clock, MapPin, FileText, MessageCircle } from "lucide-react";
 import { StatCard } from "@/components/features/StatCard";
 import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
 import { SalesChart } from "@/components/features/SalesChart";
 import { CalendarWidget } from "@/components/features/CalendarWidget";
-import { MessageCircle } from "lucide-react";
 import { generateWeeklySummaryWhatsAppLink } from "@/lib/whatsapp";
 import Link from "next/link";
 import { MobileCalendarAgenda } from "@/components/mobile/MobileCalendarAgenda";
@@ -101,6 +99,52 @@ export default function Dashboard() {
         }
     ];
 
+    const sessionAlertWidget = {
+        id: 'session-alert',
+        colSpan: 'col-span-4',
+        title: 'Sessões Agendadas',
+        component: (
+            <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm h-full">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Clock className="w-32 h-32 text-amber-600" />
+                </div>
+                <div className="relative z-10 flex flex-col h-full gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
+                            <Clock className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-amber-900 font-bold text-lg leading-tight">Sessões & Retomadas</h3>
+                            <p className="text-amber-700/70 text-xs font-medium">Atenção aos horários agendados.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {scheduledSessions.map(t => (
+                            <Link key={t.id} href={`/tenders/${t.id}/edit?returnTo=/`} className="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-sm hover:shadow-md transition-all border border-amber-100 hover:border-amber-300 hover:scale-[1.01] group/card flex flex-col justify-between h-24">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-[9px] font-black uppercase tracking-widest bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">
+                                        {formatDate(t.nextSessionDate!)}
+                                    </div>
+                                    {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() && (
+                                        <div className="flex items-center gap-1 bg-red-100 px-2 py-0.5 rounded-full">
+                                            <span className="animate-pulse w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+                                            <span className="text-[8px] font-black text-red-600 uppercase">Hoje</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="font-bold text-slate-800 truncate text-sm mb-0.5 group-hover/card:text-blue-600 transition-colors uppercase italic">{t.title}</div>
+                                    <div className="text-[10px] text-slate-500 font-medium truncate">{t.agency}</div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )
+    };
+
     const calendarWidget = {
         id: 'calendar-widget',
         colSpan: 'col-span-3',
@@ -154,7 +198,7 @@ export default function Dashboard() {
                                         {groups[date].map((tender) => (
                                             <Link
                                                 key={tender.id}
-                                                href={`/ tenders / ${tender.id}/edit`}
+                                                href={`/tenders/${tender.id}/edit?returnTo=/`}
                                                 className="block bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-400 hover:scale-[1.02] transition-all group"
                                             >
                                                 <h4 className="font-black text-slate-800 leading-tight mb-3 group-hover:text-blue-600 transition-colors uppercase italic text-sm">{tender.title}</h4>
@@ -213,10 +257,11 @@ export default function Dashboard() {
     // Lista final de itens para o dashboard
     const dashboardItems = [
         ...statCards,
+        ...(scheduledSessions.length > 0 ? [sessionAlertWidget] : []),
         calendarWidget,
         urgentWidget,
         chartWidget
-    ] as any[]; // Type cast simplificado para evitar conflitos de tipagem rápida
+    ] as any[];
 
     if (isLoading) {
         return (
@@ -259,42 +304,6 @@ export default function Dashboard() {
                         </Link>
                     </div>
                 </div>
-
-                {/* ALERTA DE SESSÕES AGENDADAS / RETOMADAS */}
-                {scheduledSessions.length > 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 relative overflow-hidden group shadow-sm animate-in fade-in slide-in-from-top-4">
-                        <div className="absolute -top-6 -right-6 p-4 opacity-10 group-hover:opacity-20 transition-opacity rotate-12">
-                            <Clock className="w-48 h-48 text-amber-600" />
-                        </div>
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-3 bg-amber-100 rounded-xl text-amber-700">
-                                    <Clock className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-amber-900 font-black text-xl tracking-tight">Sessões & Retomadas</h3>
-                                    <p className="text-amber-700/80 text-sm font-bold">Fique atento aos horários de reinício de pregão.</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {scheduledSessions.map(t => (
-                                    <Link key={t.id} href={`/tenders/${t.id}/edit`} className="bg-white/80 backdrop-blur-sm p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-amber-100 hover:border-amber-300 hover:scale-[1.02] group/card">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-800 px-2 py-1 rounded">
-                                                {formatDate(t.nextSessionDate!)}
-                                            </div>
-                                            {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() && (
-                                                <span className="animate-pulse w-2 h-2 bg-red-500 rounded-full"></span>
-                                            )}
-                                        </div>
-                                        <div className="font-black text-slate-800 truncate mb-1 group-hover/card:text-blue-600 transition-colors uppercase italic text-sm">{t.title}</div>
-                                        <div className="text-xs text-slate-500 font-medium truncate">{t.agency}</div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Componente de Dashboard Editável */}
                 <EditableDashboard initialItems={dashboardItems} />
