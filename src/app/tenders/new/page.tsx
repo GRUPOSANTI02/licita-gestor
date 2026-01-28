@@ -27,7 +27,6 @@ export default function NewTenderPage() {
         deadline: "",
         description: "",
         editalUrl: "",
-        editalUrl: "",
         nextSessionDate: "",
         responsibleId: "1",
     });
@@ -45,8 +44,6 @@ export default function NewTenderPage() {
             wonValue: form.status === 'won' ? (parseCurrencyToNumber(form.wonValue) || 0) : undefined,
             status: form.status,
             deadline: form.deadline,
-            description: form.description,
-            editalUrl: form.editalUrl,
             description: form.description,
             editalUrl: form.editalUrl,
             nextSessionDate: form.nextSessionDate,
@@ -94,6 +91,7 @@ export default function NewTenderPage() {
                                         deadline: "",
                                         description: "",
                                         editalUrl: "",
+                                        nextSessionDate: "",
                                         responsibleId: "1",
                                     });
                                     setSavedTender(null);
