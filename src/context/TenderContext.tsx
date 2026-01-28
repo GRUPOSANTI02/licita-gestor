@@ -87,7 +87,8 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                         editalUrl: t.edital_url,
                         responsibleId: t.responsible_id,
                         createdAt: t.created_at,
-                        updatedAt: t.updated_at
+                        updatedAt: t.updated_at,
+                        nextSessionDate: t.next_session_date
                     }));
                     setTenders(mappedData);
                     localStorage.setItem("licita_gestor_data", JSON.stringify(mappedData));
@@ -138,6 +139,8 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                 deadline: data.deadline,
                 description: data.description,
                 edital_url: data.editalUrl,
+                edital_url: data.editalUrl,
+                next_session_date: data.nextSessionDate,
                 responsible_id: data.responsibleId || "1",
             }]);
         }
@@ -163,7 +166,9 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             if (data.status !== undefined) supabaseData.status = data.status;
             if (data.deadline !== undefined) supabaseData.deadline = data.deadline;
             if (data.description !== undefined) supabaseData.description = data.description;
+            if (data.description !== undefined) supabaseData.description = data.description;
             if (data.editalUrl !== undefined) supabaseData.edital_url = data.editalUrl;
+            if (data.nextSessionDate !== undefined) supabaseData.next_session_date = data.nextSessionDate;
 
 
             await supabase.from('tenders').update(supabaseData).eq('id', id);

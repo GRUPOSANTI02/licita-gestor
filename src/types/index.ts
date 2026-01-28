@@ -21,6 +21,7 @@ export interface Tender {
     description?: string;
     editalUrl?: string; // Link para o edital (PDF/Site)
     responsibleId: string;
+    nextSessionDate?: string; // Data da próxima sessão/retomada
     createdAt: string;
     updatedAt: string;
 }

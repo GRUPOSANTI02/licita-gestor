@@ -3,7 +3,7 @@
 import { useTenders } from "@/context/TenderContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Save, DollarSign, CheckCircle2, MessageCircle, Plus, Home } from "lucide-react";
+import { ArrowLeft, Save, DollarSign, CheckCircle2, MessageCircle, Plus, Home, Clock } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency, maskCurrency, parseCurrencyToNumber } from "@/lib/utils";
 import { generateSingleTenderWhatsAppLink } from "@/lib/whatsapp";
@@ -27,6 +27,8 @@ export default function NewTenderPage() {
         deadline: "",
         description: "",
         editalUrl: "",
+        editalUrl: "",
+        nextSessionDate: "",
         responsibleId: "1",
     });
 
@@ -45,6 +47,9 @@ export default function NewTenderPage() {
             deadline: form.deadline,
             description: form.description,
             editalUrl: form.editalUrl,
+            description: form.description,
+            editalUrl: form.editalUrl,
+            nextSessionDate: form.nextSessionDate,
             responsibleId: "1",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -227,6 +232,20 @@ export default function NewTenderPage() {
                                 value={form.deadline}
                                 onChange={(e) => setForm({ ...form, deadline: e.target.value })}
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-amber-500 flex items-center gap-2">
+                                <Clock className="w-4 h-4" />
+                                Próxima Sessão / Retomada
+                            </label>
+                            <input
+                                type="datetime-local"
+                                className="w-full p-4 bg-amber-50 border border-amber-200 rounded-2xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all font-bold text-slate-700"
+                                value={form.nextSessionDate}
+                                onChange={(e) => setForm({ ...form, nextSessionDate: e.target.value })}
+                            />
+                            <p className="text-[10px] text-slate-400 font-bold ml-1">Opcional: Use se a sessão for suspensa.</p>
                         </div>
                     </div>
 

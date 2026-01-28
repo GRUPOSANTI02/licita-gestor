@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { TenderCard } from "@/components/features/TenderCard";
 import { useTenders } from "@/context/TenderContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -15,6 +17,15 @@ import { MobileCalendarAgenda } from "@/components/mobile/MobileCalendarAgenda";
 
 export default function Dashboard() {
     const { tenders, isLoading } = useTenders();
+
+    // Identificar licitações com Sessão de Retomada agendada (Hoje ou Futuro)
+    const scheduledSessions = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return tenders
+            .filter(t => t.nextSessionDate && new Date(t.nextSessionDate) >= today)
+            .sort((a, b) => new Date(a.nextSessionDate!).getTime() - new Date(b.nextSessionDate!).getTime());
+    }, [tenders]);
 
     // Calcular estatísticas reais considerando rótulos em Português e Inglês
     const totalValue = tenders.reduce((acc, t) => acc + (t.value || 0), 0);
@@ -248,6 +259,42 @@ export default function Dashboard() {
                         </Link>
                     </div>
                 </div>
+
+                {/* ALERTA DE SESSÕES AGENDADAS / RETOMADAS */}
+                {scheduledSessions.length > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 relative overflow-hidden group shadow-sm animate-in fade-in slide-in-from-top-4">
+                        <div className="absolute -top-6 -right-6 p-4 opacity-10 group-hover:opacity-20 transition-opacity rotate-12">
+                            <Clock className="w-48 h-48 text-amber-600" />
+                        </div>
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 bg-amber-100 rounded-xl text-amber-700">
+                                    <Clock className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-amber-900 font-black text-xl tracking-tight">Sessões & Retomadas</h3>
+                                    <p className="text-amber-700/80 text-sm font-bold">Fique atento aos horários de reinício de pregão.</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {scheduledSessions.map(t => (
+                                    <Link key={t.id} href={`/tenders/${t.id}/edit`} className="bg-white/80 backdrop-blur-sm p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-amber-100 hover:border-amber-300 hover:scale-[1.02] group/card">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                                                {formatDate(t.nextSessionDate!)}
+                                            </div>
+                                            {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() && (
+                                                <span className="animate-pulse w-2 h-2 bg-red-500 rounded-full"></span>
+                                            )}
+                                        </div>
+                                        <div className="font-black text-slate-800 truncate mb-1 group-hover/card:text-blue-600 transition-colors uppercase italic text-sm">{t.title}</div>
+                                        <div className="text-xs text-slate-500 font-medium truncate">{t.agency}</div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Componente de Dashboard Editável */}
                 <EditableDashboard initialItems={dashboardItems} />
