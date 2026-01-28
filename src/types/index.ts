@@ -1,4 +1,4 @@
-export type TenderStatus = 'won' | 'lost' | 'pending' | 'in_progress' | 'not_participated' | 'Ganha' | 'Perdida' | 'Em Análise' | 'Aguardando' | 'Não Participou';
+export type TenderStatus = 'won' | 'lost' | 'pending' | 'in_progress' | 'running' | 'not_participated' | 'Ganha' | 'Perdida' | 'Em Análise' | 'Em Andamento' | 'Aguardando' | 'Não Participou';
 
 export interface User {
     id: string;

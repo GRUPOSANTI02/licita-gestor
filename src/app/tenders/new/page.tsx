@@ -134,7 +134,7 @@ export default function NewTenderPage() {
                         <div className="space-y-2 md:col-span-2">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400">Status da Licitação</label>
                             <div className="flex flex-wrap gap-2">
-                                {['pending', 'in_progress', 'won', 'lost', 'not_participated'].map((s) => (
+                                {['pending', 'in_progress', 'running', 'won', 'lost', 'not_participated'].map((s) => (
                                     <button
                                         key={s}
                                         type="button"
@@ -143,11 +143,12 @@ export default function NewTenderPage() {
                                             ? (s === 'won' ? 'bg-green-600 border-green-600 text-white shadow-lg shadow-green-200' :
                                                 s === 'lost' ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-200' :
                                                     s === 'not_participated' ? 'bg-slate-600 border-slate-600 text-white shadow-lg shadow-slate-200' :
-                                                        'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200')
+                                                        (s as string) === 'running' ? 'bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-200' :
+                                                            'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200')
                                             : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
                                             }`}
                                     >
-                                        {s === 'pending' ? 'Pendente' : s === 'in_progress' ? 'Em Análise' : s === 'won' ? 'Ganha' : s === 'lost' ? 'Perdida' : 'Não Participou'}
+                                        {s === 'pending' ? 'Pendente' : s === 'in_progress' ? 'Em Análise' : s === 'running' ? 'Em Andamento' : s === 'won' ? 'Ganha' : s === 'lost' ? 'Perdida' : 'Não Participou'}
                                     </button>
                                 ))}
                             </div>

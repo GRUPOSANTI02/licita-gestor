@@ -40,11 +40,16 @@ export default function EditTenderPage() {
                     city: tender.city,
                     value: maskCurrency(Math.round(tender.value * 100).toString()),
                     wonValue: tender.wonValue ? maskCurrency(Math.round(tender.wonValue * 100).toString()) : "",
-                    status: tender.status,
-                    deadline: tender.deadline ? new Date(tender.deadline).toISOString().slice(0, 16) : "",
+                    status: (tender.status === 'Não Participou' ? 'not_participated' :
+                        tender.status === 'Em Andamento' ? 'running' :
+                            tender.status === 'Ganha' ? 'won' :
+                                tender.status === 'Perdida' ? 'lost' :
+                                    tender.status === 'Em Análise' ? 'in_progress' :
+                                        tender.status === 'Aguardando' ? 'pending' : tender.status) as TenderStatus,
+                    deadline: tender.deadline ? new Date(new Date(tender.deadline).getTime() - (new Date(tender.deadline).getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
                     description: tender.description || "",
                     editalUrl: tender.editalUrl || "",
-                    nextSessionDate: tender.nextSessionDate ? new Date(tender.nextSessionDate).toISOString().slice(0, 16) : "",
+                    nextSessionDate: tender.nextSessionDate ? new Date(new Date(tender.nextSessionDate).getTime() - (new Date(tender.nextSessionDate).getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
                 });
             } else {
                 router.push("/tenders");
@@ -102,8 +107,8 @@ export default function EditTenderPage() {
                                         className={`px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border-2 ${form.status === s
                                             ? (s === 'won' ? 'bg-green-600 border-green-600 text-white shadow-lg shadow-green-200' :
                                                 s === 'lost' ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-200' :
-                                                    s === 'not_participated' ? 'bg-slate-600 border-slate-600 text-white shadow-lg shadow-slate-200' :
-                                                        (s as string) === 'running' ? 'bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-200' :
+                                                    s === 'not_participated' ? 'bg-slate-500 border-slate-500 text-white shadow-lg shadow-slate-200' :
+                                                        (s as string) === 'running' ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200' :
                                                             'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200')
                                             : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
                                             }`}
