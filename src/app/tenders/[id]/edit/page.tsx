@@ -103,7 +103,7 @@ export default function EditTenderPage() {
                                             ? (s === 'won' ? 'bg-green-600 border-green-600 text-white shadow-lg shadow-green-200' :
                                                 s === 'lost' ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-200' :
                                                     s === 'not_participated' ? 'bg-slate-600 border-slate-600 text-white shadow-lg shadow-slate-200' :
-                                                        s === 'running' ? 'bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-200' :
+                                                        (s as string) === 'running' ? 'bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-200' :
                                                             'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200')
                                             : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
                                             }`}
