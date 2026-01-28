@@ -136,7 +136,9 @@ export default function EditAtaPage({ params }: { params: { id: string } }) {
 
     if (isLoadingData) {
         return (
-            <div className="p-10 flex justify-center text-amber-500"><Loader2 className="w-8 h-8 animate-spin" /></div>
+            <div className="p-10 flex justify-center text-amber-500">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
         );
     }
 
