@@ -96,52 +96,47 @@ export default function Dashboard() {
         }
     ];
 
-    // Novo Widget Compacto de Sessões
-    const sessionAlertWidget = {
-        id: 'session-alert-compact',
-        colSpan: 'col-span-4',
-        title: 'Próximas Sessões',
-        component: (
-            <div className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-3xl p-4 overflow-x-auto">
-                <div className="flex-shrink-0 flex items-center gap-2 pr-4 border-r border-amber-200">
-                    <div className="p-2 bg-amber-500 rounded-xl text-white shadow-lg shadow-amber-500/20">
-                        <Clock className="w-4 h-4" />
-                    </div>
-                    <div>
-                        <h3 className="text-amber-900 font-black text-xs uppercase tracking-widest leading-tight">Retomadas</h3>
-                        <p className="text-amber-700/60 text-[10px] font-bold">Não perca o horário</p>
-                    </div>
-                </div>
-
-                <div className="flex-1 flex items-center gap-3">
-                    {scheduledSessions.map(t => (
-                        <Link key={t.id} href={`/tenders/${t.id}/edit?returnTo=/`} className="flex-shrink-0 flex items-center gap-4 bg-white px-4 py-3 rounded-2xl border border-amber-100 hover:border-amber-300 hover:scale-105 transition-all shadow-sm group min-w-[240px]">
-                            <div className="flex flex-col w-full">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
-                                        {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() ? 'HOJE' : formatDate(t.nextSessionDate!).split(' ')[0]} • {new Date(t.nextSessionDate!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                    <div className="flex items-center gap-1 text-slate-400">
-                                        <MapPin className="w-3 h-3" />
-                                        <span className="text-[9px] font-bold uppercase">{t.city}</span>
-                                    </div>
-                                </div>
-                                <span className="text-xs font-black text-slate-800 truncate w-full group-hover:text-blue-600 transition-colors uppercase italic">{t.title}</span>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500" />
-                        </Link>
-                    ))}
-                </div>
-            </div>
-        )
-    };
-
     const calendarWidget = {
         id: 'calendar-widget',
         colSpan: 'col-span-3',
         title: 'Cronograma',
         component: (
-            <div className="space-y-6 h-full">
+            <div className="space-y-6 h-full flex flex-col">
+                {/* ALERTA DE SESSÕES INTEGRADO AO BLOCO DO CRONOGRAMA */}
+                {scheduledSessions.length > 0 && (
+                    <div className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-3xl p-4 overflow-x-auto mb-2 animate-in fade-in slide-in-from-top-4">
+                        <div className="flex-shrink-0 flex items-center gap-2 pr-4 border-r border-amber-200">
+                            <div className="p-2 bg-amber-500 rounded-xl text-white shadow-lg shadow-amber-500/20">
+                                <Clock className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <h3 className="text-amber-900 font-black text-xs uppercase tracking-widest leading-tight">Retomadas</h3>
+                                <p className="text-amber-700/60 text-[10px] font-bold">Não perca o horário</p>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex items-center gap-3">
+                            {scheduledSessions.map(t => (
+                                <Link key={t.id} href={`/tenders/${t.id}/edit?returnTo=/`} className="flex-shrink-0 flex items-center gap-4 bg-white px-4 py-3 rounded-2xl border border-amber-100 hover:border-amber-300 hover:scale-105 transition-all shadow-sm group min-w-[240px]">
+                                    <div className="flex flex-col w-full">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
+                                                {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() ? 'HOJE' : formatDate(t.nextSessionDate!).split(' ')[0]} • {new Date(t.nextSessionDate!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            <div className="flex items-center gap-1 text-slate-400">
+                                                <MapPin className="w-3 h-3" />
+                                                <span className="text-[9px] font-bold uppercase">{t.city}</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs font-black text-slate-800 truncate w-full group-hover:text-blue-600 transition-colors uppercase italic">{t.title}</span>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500" />
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-8 bg-blue-600 rounded-full"></div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase italic">Cronograma Mensal</h2>
@@ -245,10 +240,9 @@ export default function Dashboard() {
         )
     };
 
-    // Lista final de itens para o dashboard
+    // Lista final de itens para o dashboard: REMOVIDO ALERT widget avulso
     const dashboardItems = [
         ...statCards,
-        ...(scheduledSessions.length > 0 ? [sessionAlertWidget] : []),
         calendarWidget,
         urgentWidget,
         chartWidget
