@@ -538,5 +538,5 @@ export default function EditAtaPage({ params }: { params: { id: string } }) {
     </form>
             </div >
         </div >
-    );
+
 }
