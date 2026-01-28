@@ -527,7 +527,7 @@ export function EditAtaForm({ ataId }: { ataId: string }) {
             </button>
         </div>
     </form>
-            </div >
         </div >
-        </div >
+    </div >
+    );
 }
