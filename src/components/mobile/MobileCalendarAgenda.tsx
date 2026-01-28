@@ -136,7 +136,7 @@ export function MobileCalendarAgenda() {
                             const time = deadlineDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                             return (
-                                <Link href={`/tenders/${tender.id}/edit`} key={tender.id} className="block group">
+                                <Link href={`/tenders/${tender.id}/edit?returnTo=/`} key={tender.id} className="block group">
                                     <div className="bg-slate-900 rounded-2xl overflow-hidden flex border border-slate-800 hover:border-blue-500 transition-colors">
                                         {/* Barra lateral colorida */}
                                         <div className="w-2 bg-blue-500"></div>

@@ -103,7 +103,7 @@ export function CalendarWidget() {
                                 {dayTenders.map((t, idx) => (
                                     <Link
                                         key={idx}
-                                        href={`/tenders/${t.id}/edit`}
+                                        href={`/tenders/${t.id}/edit?returnTo=/`}
                                         className={`
                                             group w-full p-2.5 rounded-xl flex flex-col gap-1 transition-all hover:scale-[1.02] hover:shadow-lg relative overflow-hidden
                                             ${(t.status === 'Ganha' || t.status === 'won')
