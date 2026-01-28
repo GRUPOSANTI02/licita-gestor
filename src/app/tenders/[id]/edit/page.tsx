@@ -1,7 +1,7 @@
 "use client";
 
 import { useTenders } from "@/context/TenderContext";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Save, DollarSign, Clock } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ export default function EditTenderPage() {
     const { tenders, updateTender, isLoading } = useTenders();
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const id = params.id as string;
 
     const [form, setForm] = useState({
@@ -68,7 +69,8 @@ export default function EditTenderPage() {
             nextSessionDate: form.nextSessionDate,
         });
 
-        router.push("/tenders");
+        const returnTo = searchParams.get("returnTo");
+        router.push(returnTo || "/tenders");
     };
 
     if (isLoading) return <div className="p-10 text-center font-black animate-pulse">Carregando dados...</div>;
