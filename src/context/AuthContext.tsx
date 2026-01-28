@@ -38,18 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    useEffect(() => {
-        if (!isLoading) {
-            // Lógica de proteção desativada
-            // if (!isAuthenticated && pathname !== "/login") {
-            //     router.push("/login");
-            // } else 
 
-            if (isAuthenticated && pathname === "/login") {
-                router.push("/");
-            }
-        }
-    }, [isAuthenticated, isLoading, pathname, router]);
 
     const login = (username: string, password: string, rememberMe: boolean) => {
         const correctPassword = getStoredPassword();

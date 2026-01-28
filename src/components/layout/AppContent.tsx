@@ -23,10 +23,7 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
         return <>{children}</>;
     }
 
-    // Se não estiver autenticado (segurança extra se o push do context demorar)
-    if (!isAuthenticated) {
-        return null;
-    }
+
 
     return (
         <div className="flex pb-20 lg:pb-0">
