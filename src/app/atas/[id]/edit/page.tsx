@@ -1,7 +1,5 @@
-"use client";
-
-import { EditAtaForm } from "@/components/EditAtaForm";
+import { EditAtaFormV2 } from "@/components/EditAtaFormV2";
 
 export default function EditAtaPage({ params }: { params: { id: string } }) {
-    return <EditAtaForm ataId={params.id} />;
+    return <EditAtaFormV2 ataId={params.id} />;
 }
