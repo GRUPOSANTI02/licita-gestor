@@ -257,7 +257,6 @@ export default function Dashboard() {
     // Lista final de itens para o dashboard
     const dashboardItems = [
         ...statCards,
-        ...(scheduledSessions.length > 0 ? [sessionAlertWidget] : []),
         calendarWidget,
         urgentWidget,
         chartWidget
@@ -304,6 +303,50 @@ export default function Dashboard() {
                         </Link>
                     </div>
                 </div>
+
+                {/* ALERTA DE SESSÕES (FIXO NO TOPO) */}
+                {scheduledSessions.length > 0 && (
+                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Clock className="w-32 h-32 text-amber-600" />
+                            </div>
+                            <div className="relative z-10 flex flex-col gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
+                                        <Clock className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-amber-900 font-bold text-lg leading-tight">Sessões & Retomadas</h3>
+                                        <p className="text-amber-700/70 text-xs font-medium">Atenção aos horários agendados.</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    {scheduledSessions.map(t => (
+                                        <Link key={t.id} href={`/tenders/${t.id}/edit?returnTo=/`} className="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-sm hover:shadow-md transition-all border border-amber-100 hover:border-amber-300 hover:scale-[1.01] group/card flex flex-col justify-between h-24">
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-[9px] font-black uppercase tracking-widest bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">
+                                                    {formatDate(t.nextSessionDate!)}
+                                                </div>
+                                                {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() && (
+                                                    <div className="flex items-center gap-1 bg-red-100 px-2 py-0.5 rounded-full">
+                                                        <span className="animate-pulse w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+                                                        <span className="text-[8px] font-black text-red-600 uppercase">Hoje</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-800 truncate text-sm mb-0.5 group-hover/card:text-blue-600 transition-colors uppercase italic">{t.title}</div>
+                                                <div className="text-[10px] text-slate-500 font-medium truncate">{t.agency}</div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Componente de Dashboard Editável */}
                 <EditableDashboard initialItems={dashboardItems} />
