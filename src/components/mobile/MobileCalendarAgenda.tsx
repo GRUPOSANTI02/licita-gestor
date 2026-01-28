@@ -135,11 +135,21 @@ export function MobileCalendarAgenda() {
                             const deadlineDate = new Date(tender.deadline);
                             const time = deadlineDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+                            const statusColor = (tender.status === 'won' || tender.status === 'Ganha') ? 'bg-green-500'
+                                : (tender.status === 'lost' || tender.status === 'Perdida') ? 'bg-red-500'
+                                    : (tender.status === 'running' || tender.status === 'Em Andamento') ? 'bg-purple-600'
+                                        : 'bg-blue-500';
+
+                            const borderColor = (tender.status === 'won' || tender.status === 'Ganha') ? 'hover:border-green-500'
+                                : (tender.status === 'lost' || tender.status === 'Perdida') ? 'hover:border-red-500'
+                                    : (tender.status === 'running' || tender.status === 'Em Andamento') ? 'hover:border-purple-600'
+                                        : 'hover:border-blue-500';
+
                             return (
                                 <Link href={`/tenders/${tender.id}/edit?returnTo=/`} key={tender.id} className="block group">
-                                    <div className="bg-slate-900 rounded-2xl overflow-hidden flex border border-slate-800 hover:border-blue-500 transition-colors">
+                                    <div className={`bg-slate-900 rounded-2xl overflow-hidden flex border border-slate-800 ${borderColor} transition-colors`}>
                                         {/* Barra lateral colorida */}
-                                        <div className="w-2 bg-blue-500"></div>
+                                        <div className={`w-2 ${statusColor}`}></div>
 
                                         <div className="p-4 flex-1">
                                             <div className="flex justify-between items-start mb-2">

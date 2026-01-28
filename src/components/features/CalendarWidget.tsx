@@ -110,7 +110,9 @@ export function CalendarWidget() {
                                                 ? 'bg-[#16a34a] text-white' // Verde Sólido Forte (Green 600)
                                                 : (t.status === 'Perdida' || t.status === 'lost')
                                                     ? 'bg-[#dc2626] text-white' // Vermelho Sólido Forte (Red 600)
-                                                    : 'bg-[#2563eb] text-white' // Azul Sólido Forte (Blue 600)
+                                                    : (t.status === 'running' || t.status === 'Em Andamento')
+                                                        ? 'bg-purple-600 text-white' // Roxo Sólido
+                                                        : 'bg-[#2563eb] text-white' // Azul Sólido Forte (Blue 600)
                                             }
                                         `}
                                     >
