@@ -25,7 +25,10 @@ export default function Dashboard() {
             .sort((a, b) => new Date(a.nextSessionDate!).getTime() - new Date(b.nextSessionDate!).getTime());
     }, [tenders]);
 
-    const totalValue = tenders.reduce((acc, t) => acc + (t.value || 0), 0);
+    const totalValue = tenders
+        .filter(t => t.status !== 'not_participated' && t.status !== 'Não Participou')
+        .reduce((acc, t) => acc + (t.value || 0), 0);
+
     const activeTendersList = tenders.filter(t =>
         t.status === 'in_progress' ||
         t.status === 'pending' ||
@@ -34,6 +37,8 @@ export default function Dashboard() {
     );
     const wonTenders = tenders.filter(t => t.status === 'won' || t.status === 'Ganha');
     const totalWonRevenue = wonTenders.reduce((acc, t) => acc + (t.wonValue || t.value || 0), 0);
+
+    const participatedTendersCount = tenders.filter(t => t.status !== 'not_participated' && t.status !== 'Não Participou').length;
 
     const urgentTenders = [...activeTendersList]
         .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
@@ -88,7 +93,7 @@ export default function Dashboard() {
             component: (
                 <StatCard
                     title="Taxa de Vitória"
-                    value={tenders.length > 0 ? `${Math.round((wonTenders.length / tenders.length) * 100)}% ` : "0%"}
+                    value={participatedTendersCount > 0 ? `${Math.round((wonTenders.length / participatedTendersCount) * 100)}% ` : "0%"}
                     icon={<Users className="text-purple-600 w-5 h-5" />}
                     trend="Baseado no histórico"
                 />
