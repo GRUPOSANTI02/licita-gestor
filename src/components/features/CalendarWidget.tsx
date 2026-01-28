@@ -63,7 +63,7 @@ export function CalendarWidget() {
             </div>
 
             {/* Dias da Semana - Fontes Maiores */}
-            <div className="grid grid-cols-7 mb-4 bg-slate-50/50 rounded-xl p-3 border border-slate-50">
+            <div className="grid grid-cols-7 lg:grid-cols-[0.6fr_1fr_1fr_1fr_1fr_1fr_0.6fr] mb-4 bg-slate-50/50 rounded-xl p-3 border border-slate-50">
                 {['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map((day, idx) => (
                     <div key={idx} className="text-center text-[10px] sm:text-[11px] font-black text-slate-400 tracking-[0.2em]">
                         {day}
@@ -72,7 +72,7 @@ export function CalendarWidget() {
             </div>
 
             {/* Grid de Dias - Células MAIORES */}
-            <div className="grid grid-cols-7 gap-2 sm:gap-3">
+            <div className="grid grid-cols-7 lg:grid-cols-[0.6fr_1fr_1fr_1fr_1fr_1fr_0.6fr] gap-2 sm:gap-3">
                 {Array.from({ length: firstDay }).map((_, i) => (
                     <div key={`empty-${i}`} className="min-h-[100px] sm:min-h-[140px] bg-slate-50/10 rounded-2xl border border-transparent" />
                 ))}
