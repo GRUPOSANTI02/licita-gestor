@@ -404,125 +404,123 @@ export default function EditAtaPage({ params }: { params: { id: string } }) {
                         />
                     </div>
 
-                        {/* UPLOAD DE ARQUIVO */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">OU Anexar Arquivo (PDF)</label>
-                            <div className={`border-2 border-dashed rounded-2xl p-6 transition-colors text-center ${selectedFile ? 'border-green-500 bg-green-50' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'}`}>
-                                <input
-                                    type="file"
-                                    accept=".pdf"
-                                    className="hidden"
-                                    id="file-upload"
-                                    onChange={handleFileChange}
-                                />
-                                <label htmlFor="file-upload" className="cursor-pointer block w-full h-full">
-                                    {selectedFile ? (
-                                        <div className="flex flex-col items-center text-green-700">
-                                            <CheckCircle2 className="w-8 h-8 mb-2" />
-                                            <span className="font-bold text-sm">{selectedFile.name}</span>
-                                            <span className="text-xs opacity-70">Clique para alterar (substitui o anterior)</span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center text-slate-400">
-                                            <UploadCloud className="w-8 h-8 mb-2" />
-                                            {form.attachmentUrl ? (
-                                                <div className="text-center">
-                                                    <span className="font-bold text-sm text-green-600 block mb-1">Arquivo já anexado!</span>
-                                                    <span className="text-xs text-slate-500 block">Clique para substituir</span>
-                                                </div>
-                                            ) : (
-                                                <div className="text-center">
-                                                    <span className="font-bold text-sm text-slate-600">Clique para selecionar arquivo</span>
-                                                    <span className="text-xs block">Apenas PDF (Máx 10MB)</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Início da Vigência</label>
+                    {/* UPLOAD DE ARQUIVO */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">OU Anexar Arquivo (PDF)</label>
+                        <div className={`border-2 border-dashed rounded-2xl p-6 transition-colors text-center ${selectedFile ? 'border-green-500 bg-green-50' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'}`}>
                             <input
-                                required
-                                type="date"
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
-                                value={form.startDate}
-                                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                                type="file"
+                                accept=".pdf"
+                                className="hidden"
+                                id="file-upload"
+                                onChange={handleFileChange}
                             />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Fim da Vigência</label>
-                            <input
-                                required
-                                type="date"
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
-                                value={form.endDate}
-                                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2 md:col-span-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">Opções Adicionais</label>
-                        <div className="flex gap-4">
-                            <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.canExtend ? 'border-green-500 bg-green-50 text-green-700' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <input
-                                    type="checkbox"
-                                    className="w-5 h-5 accent-green-600"
-                                    checked={form.canExtend}
-                                    onChange={(e) => setForm({ ...form, canExtend: e.target.checked })}
-                                />
-                                <div>
-                                    <span className="font-bold block text-sm">Prorrogável</span>
-                                    <span className="text-xs opacity-70">Permite renovação de prazo</span>
-                                </div>
-                            </label>
-
-                            <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.canAdhere ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <input
-                                    type="checkbox"
-                                    className="w-5 h-5 accent-amber-600"
-                                    checked={form.canAdhere}
-                                    onChange={(e) => setForm({ ...form, canAdhere: e.target.checked })}
-                                />
-                                <div>
-                                    <span className="font-bold block text-sm">Permite Adesão (Carona)</span>
-                                    <span className="text-xs opacity-70">Outros órgãos podem aderir</span>
-                                </div>
-                            </label>
-
-                            <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.isExtended ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300'}`}>
-                                <input
-                                    type="checkbox"
-                                    className="w-5 h-5 accent-blue-600"
-                                    checked={form.isExtended}
-                                    onChange={(e) => setForm({ ...form, isExtended: e.target.checked })}
-                                />
-                                <div>
-                                    <span className="font-bold block text-sm">Ata Aditivada</span>
-                                    <span className="text-xs opacity-70">Marque se houve aditivo</span>
-                                </div>
+                            <label htmlFor="file-upload" className="cursor-pointer block w-full h-full">
+                                {selectedFile ? (
+                                    <div className="flex flex-col items-center text-green-700">
+                                        <CheckCircle2 className="w-8 h-8 mb-2" />
+                                        <span className="font-bold text-sm">{selectedFile.name}</span>
+                                        <span className="text-xs opacity-70">Clique para alterar (substitui o anterior)</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center text-slate-400">
+                                        <UploadCloud className="w-8 h-8 mb-2" />
+                                        {form.attachmentUrl ? (
+                                            <div className="text-center">
+                                                <span className="font-bold text-sm text-green-600 block mb-1">Arquivo já anexado!</span>
+                                                <span className="text-xs text-slate-500 block">Clique para substituir</span>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center">
+                                                <span className="font-bold text-sm text-slate-600">Clique para selecionar arquivo</span>
+                                                <span className="text-xs block">Apenas PDF (Máx 10MB)</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </label>
                         </div>
-                    </div>
-
-                    <div className="space-y-2 md:col-span-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Observações</label>
-                        <textarea
-                            rows={4}
-                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none resize-none font-medium text-slate-600 focus:ring-2 focus:ring-amber-500"
-                            placeholder="Detalhes importantes sobre a ata..."
-                            value={form.observations}
-                            onChange={(e) => setForm({ ...form, observations: e.target.value })}
-                        />
                     </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Início da Vigência</label>
+                    <input
+                        required
+                        type="date"
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
+                        value={form.startDate}
+                        onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Fim da Vigência</label>
+                    <input
+                        required
+                        type="date"
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
+                        value={form.endDate}
+                        onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">Opções Adicionais</label>
+                <div className="flex gap-4">
+                    <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.canExtend ? 'border-green-500 bg-green-50 text-green-700' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <input
+                            type="checkbox"
+                            className="w-5 h-5 accent-green-600"
+                            checked={form.canExtend}
+                            onChange={(e) => setForm({ ...form, canExtend: e.target.checked })}
+                        />
+                        <div>
+                            <span className="font-bold block text-sm">Prorrogável</span>
+                            <span className="text-xs opacity-70">Permite renovação de prazo</span>
+                        </div>
+                    </label>
+
+                    <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.canAdhere ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <input
+                            type="checkbox"
+                            className="w-5 h-5 accent-amber-600"
+                            checked={form.canAdhere}
+                            onChange={(e) => setForm({ ...form, canAdhere: e.target.checked })}
+                        />
+                        <div>
+                            <span className="font-bold block text-sm">Permite Adesão (Carona)</span>
+                            <span className="text-xs opacity-70">Outros órgãos podem aderir</span>
+                        </div>
+                    </label>
+
+                    <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.isExtended ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <input
+                            type="checkbox"
+                            className="w-5 h-5 accent-blue-600"
+                            checked={form.isExtended}
+                            onChange={(e) => setForm({ ...form, isExtended: e.target.checked })}
+                        />
+                        <div>
+                            <span className="font-bold block text-sm">Ata Aditivada</span>
+                            <span className="text-xs opacity-70">Marque se houve aditivo</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Observações</label>
+                <textarea
+                    rows={4}
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none resize-none font-medium text-slate-600 focus:ring-2 focus:ring-amber-500"
+                    placeholder="Detalhes importantes sobre a ata..."
+                    value={form.observations}
+                    onChange={(e) => setForm({ ...form, observations: e.target.value })}
+                />
+            </div>
             <div className="pt-8 border-t border-slate-100 flex justify-end">
                 <button
                     type="submit"
@@ -536,7 +534,7 @@ export default function EditAtaPage({ params }: { params: { id: string } }) {
                     )}
                 </button>
             </div>
-        </form >
+        </form>
             </div >
         </div >
     );

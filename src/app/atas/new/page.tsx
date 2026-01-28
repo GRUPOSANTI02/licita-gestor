@@ -379,24 +379,22 @@ function NewAtaContent() {
                             onChange={(e) => setForm({ ...form, observations: e.target.value })}
                         />
                     </div>
+                    <div className="pt-8 border-t border-slate-100 flex justify-end">
+                        <button
+                            type="submit"
+                            disabled={uploading}
+                            className="bg-amber-500 hover:bg-amber-600 text-white px-10 py-4 rounded-2xl font-black flex items-center gap-3 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-amber-500/40 uppercase tracking-widest text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {uploading ? (
+                                <><Loader2 className="w-5 h-5 animate-spin" /> Enviando...</>
+                            ) : (
+                                <><Save className="w-5 h-5" /> Salvar Ata</>
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div className="pt-8 border-t border-slate-100 flex justify-end">
-                <button
-                    type="submit"
-                    disabled={uploading}
-                    className="bg-amber-500 hover:bg-amber-600 text-white px-10 py-4 rounded-2xl font-black flex items-center gap-3 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-amber-500/40 uppercase tracking-widest text-sm disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                    {uploading ? (
-                        <><Loader2 className="w-5 h-5 animate-spin" /> Enviando...</>
-                    ) : (
-                        <><Save className="w-5 h-5" /> Salvar Ata</>
-                    )}
-                </button>
-            </div>
-        </form>
-            </div >
-        </div >
+        </div>
     );
 }
 
