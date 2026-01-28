@@ -1,5 +1,5 @@
-import { EditAtaFormV2 } from "@/components/EditAtaFormV2";
+import { EditAtaFormV3 } from "@/components/EditAtaFormV3";
 
 export default function EditAtaPage({ params }: { params: { id: string } }) {
-    return <EditAtaFormV2 ataId={params.id} />;
+    return <EditAtaFormV3 ataId={params.id} />;
 }
