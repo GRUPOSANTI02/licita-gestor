@@ -1,7 +1,7 @@
 "use client";
 
 import { useTenders } from "@/context/TenderContext";
-import { Plus, Trash2, Calendar, MapPin, Building2, Pencil } from "lucide-react";
+import { Plus, Trash2, Calendar, MapPin, Building2, Pencil, Home } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -10,19 +10,21 @@ export default function TendersPage() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case "won": return "bg-green-100 text-green-700 border-green-200";
-            case "lost": return "bg-red-100 text-red-700 border-red-200";
-            case "in_progress": return "bg-blue-100 text-blue-700 border-blue-200";
+            case "won": case "Ganha": return "bg-green-100 text-green-700 border-green-200";
+            case "lost": case "Perdida": return "bg-red-100 text-red-700 border-red-200";
+            case "in_progress": case "Em Análise": return "bg-blue-100 text-blue-700 border-blue-200";
+            case "pending": case "Aguardando": return "bg-yellow-100 text-yellow-700 border-yellow-200";
             default: return "bg-yellow-100 text-yellow-700 border-yellow-200";
         }
     };
 
     const getStatusLabel = (status: string) => {
         switch (status) {
-            case 'won': return 'Ganha';
-            case 'lost': return 'Perdida';
-            case 'in_progress': return 'Em Análise';
-            default: return 'Pendente';
+            case 'won': case 'Ganha': return 'Ganha';
+            case 'lost': case 'Perdida': return 'Perdida';
+            case 'in_progress': case 'Em Análise': return 'Em Análise';
+            case 'pending': case 'Aguardando': return 'Aguardando';
+            default: return 'Aguardando';
         }
     };
 
@@ -77,6 +79,7 @@ export default function TendersPage() {
                                         <Calendar className="w-4 h-4 text-slate-400" />
                                         Prazo: {formatDate(tender.deadline)}
                                     </div>
+
                                 </div>
                             </div>
 

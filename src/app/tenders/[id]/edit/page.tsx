@@ -24,6 +24,7 @@ export default function EditTenderPage() {
         status: "pending" as TenderStatus,
         deadline: "",
         description: "",
+        editalUrl: "",
     });
 
     useEffect(() => {
@@ -38,8 +39,9 @@ export default function EditTenderPage() {
                     value: maskCurrency(Math.round(tender.value * 100).toString()),
                     wonValue: tender.wonValue ? maskCurrency(Math.round(tender.wonValue * 100).toString()) : "",
                     status: tender.status,
-                    deadline: tender.deadline,
+                    deadline: tender.deadline ? new Date(tender.deadline).toISOString().slice(0, 16) : "",
                     description: tender.description || "",
+                    editalUrl: tender.editalUrl || "",
                 });
             } else {
                 router.push("/tenders");
@@ -60,6 +62,7 @@ export default function EditTenderPage() {
             status: form.status,
             deadline: form.deadline,
             description: form.description,
+            editalUrl: form.editalUrl,
         });
 
         router.push("/tenders");
@@ -86,7 +89,7 @@ export default function EditTenderPage() {
                         <div className="space-y-2 md:col-span-2">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400">Status da Licitação</label>
                             <div className="flex flex-wrap gap-2">
-                                {['pending', 'in_progress', 'won', 'lost'].map((s) => (
+                                {['pending', 'in_progress', 'won', 'lost', 'not_participated'].map((s) => (
                                     <button
                                         key={s}
                                         type="button"
@@ -94,11 +97,12 @@ export default function EditTenderPage() {
                                         className={`px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border-2 ${form.status === s
                                             ? (s === 'won' ? 'bg-green-600 border-green-600 text-white shadow-lg shadow-green-200' :
                                                 s === 'lost' ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-200' :
-                                                    'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200')
+                                                    s === 'not_participated' ? 'bg-slate-600 border-slate-600 text-white shadow-lg shadow-slate-200' :
+                                                        'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200')
                                             : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
                                             }`}
                                     >
-                                        {s === 'pending' ? 'Pendente' : s === 'in_progress' ? 'Em Análise' : s === 'won' ? 'Ganha' : 'Perdida'}
+                                        {s === 'pending' ? 'Pendente' : s === 'in_progress' ? 'Em Análise' : s === 'won' ? 'Ganha' : s === 'lost' ? 'Perdida' : 'Não Participou'}
                                     </button>
                                 ))}
                             </div>
@@ -199,6 +203,17 @@ export default function EditTenderPage() {
                             className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none resize-none font-medium text-slate-600"
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Link do Edital (PDF / Site)</label>
+                        <input
+                            type="url"
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-blue-500"
+                            placeholder="https://exemplo.com/edital.pdf"
+                            value={form.editalUrl}
+                            onChange={(e) => setForm({ ...form, editalUrl: e.target.value })}
                         />
                     </div>
 

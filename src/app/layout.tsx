@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { TenderProvider } from "@/context/TenderContext";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -9,8 +8,24 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "LicitaGestor App",
     description: "Gestão inteligente de licitações",
-    manifest: "/manifest.ts"
+    manifest: "/manifest.json",
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "default",
+        title: "LicitaGestor",
+    },
 };
+
+export const viewport = {
+    themeColor: "#2563eb",
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+};
+
+import { AuthProvider } from "@/context/AuthContext";
+import AppContent from "@/components/layout/AppContent";
 
 export default function RootLayout({
     children,
@@ -20,14 +35,13 @@ export default function RootLayout({
     return (
         <html lang="pt-BR">
             <body className={`${inter.className} bg-slate-50 min-h-screen text-slate-900`}>
-                <TenderProvider>
-                    <div className="flex">
-                        <Sidebar />
-                        <main className="flex-1 md:ml-64 min-h-screen w-full">
+                <AuthProvider>
+                    <TenderProvider>
+                        <AppContent>
                             {children}
-                        </main>
-                    </div>
-                </TenderProvider>
+                        </AppContent>
+                    </TenderProvider>
+                </AuthProvider>
             </body>
         </html>
     );

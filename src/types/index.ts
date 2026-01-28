@@ -1,4 +1,4 @@
-export type TenderStatus = 'won' | 'lost' | 'pending' | 'in_progress';
+export type TenderStatus = 'won' | 'lost' | 'pending' | 'in_progress' | 'not_participated' | 'Ganha' | 'Perdida' | 'Em Análise' | 'Aguardando' | 'Não Participou';
 
 export interface User {
     id: string;
@@ -19,6 +19,7 @@ export interface Tender {
     status: TenderStatus;
     deadline: string;
     description?: string;
+    editalUrl?: string; // Link para o edital (PDF/Site)
     responsibleId: string;
     createdAt: string;
     updatedAt: string;
@@ -30,4 +31,28 @@ export interface ActivityLog {
     tenderId?: string;
     action: string;
     timestamp: string;
+}
+
+export interface Ata {
+    id: string;
+    tenderId?: string; // Opcional (Pode não ter licitação vinculada)
+
+    // Campos manuais (usados se não houver tenderId)
+    manualTitle?: string;
+    manualAgency?: string;
+    manualCity?: string;
+
+    value?: number; // Valor da Ata
+    ataNumber: string;
+    startDate: string;
+    endDate: string;
+    canExtend: boolean;
+    canAdhere: boolean; // Carona
+    pdfUrl?: string; // Link externo (Drive/Dropbox)
+    attachmentUrl?: string; // Upload no Supabase
+    observations?: string;
+    isExtended: boolean;
+    company?: string; // Nome da empresa detentora da ata
+    createdAt: string;
+    updatedAt: string;
 }

@@ -17,10 +17,13 @@ export function CalendarWidget() {
 
     const getTendersForDay = (day: number) => {
         return tenders.filter(t => {
-            const tDate = new Date(t.deadline);
-            return tDate.getDate() === day &&
-                tDate.getMonth() === currentDate.getMonth() &&
-                tDate.getFullYear() === currentDate.getFullYear();
+            // Criar data sem considerar timezone para evitar problemas
+            const deadlineStr = t.deadline.split('T')[0]; // Pega apenas YYYY-MM-DD
+            const [year, month, dayOfMonth] = deadlineStr.split('-').map(Number);
+
+            return dayOfMonth === day &&
+                (month - 1) === currentDate.getMonth() &&
+                year === currentDate.getFullYear();
         });
     };
 
@@ -71,7 +74,7 @@ export function CalendarWidget() {
             {/* Grid de Dias - Células MAIORES */}
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
                 {Array.from({ length: firstDay }).map((_, i) => (
-                    <div key={`empty-${i}`} className="min-h-[120px] sm:min-h-[140px] bg-slate-50/10 rounded-2xl border border-transparent" />
+                    <div key={`empty-${i}`} className="min-h-[100px] sm:min-h-[140px] bg-slate-50/10 rounded-2xl border border-transparent" />
                 ))}
 
                 {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -84,38 +87,69 @@ export function CalendarWidget() {
                         <div
                             key={day}
                             className={`
-                                min-h-[120px] sm:min-h-[140px] relative flex flex-col p-3 rounded-2xl transition-all border-2
+                                min-h-[160px] sm:min-h-[140px] relative flex flex-col p-2 sm:p-3 rounded-2xl transition-all border-2
                                 ${isToday ? 'border-blue-600 bg-blue-50/30' : 'border-slate-50 bg-white hover:border-slate-200 hover:shadow-md'}
                                 ${hasTender && !isToday ? 'bg-slate-50 border-slate-100' : ''}
                             `}
                         >
                             <span className={`
-                                text-base font-black mb-2 
-                                ${isToday ? 'bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl shadow-lg -mt-4 -ml-4 z-10' : 'text-slate-900'}
+                                text-sm sm:text-base font-black mb-2 
+                                ${isToday ? 'bg-blue-600 text-white w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-xl shadow-lg -mt-3 sm:-mt-4 -ml-3 sm:-ml-4 z-10 text-xs sm:text-base' : 'text-slate-900'}
                             `}>
                                 {day}
                             </span>
 
-                            <div className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar-agenda pr-0.5">
+                            <div className="flex-1 flex flex-col gap-1.5 w-full overflow-y-auto custom-scrollbar-agenda pr-0.5 mt-1">
                                 {dayTenders.map((t, idx) => (
                                     <Link
                                         key={idx}
                                         href={`/tenders/${t.id}/edit`}
                                         className={`
-                                            block text-[10px] sm:text-[11px] px-2.5 py-1.5 rounded-xl border leading-tight font-black uppercase tracking-tight shadow-sm
-                                            cursor-pointer transition-all hover:scale-[1.02] active:scale-95 hover:shadow-md
-                                            ${t.status === 'won' ? 'bg-green-600 border-green-600 text-white' :
-                                                t.status === 'lost' ? 'bg-red-600 border-red-600 text-white' :
-                                                    'bg-blue-500 border-blue-500 text-white'}
+                                            group w-full p-2.5 rounded-xl flex flex-col gap-1 transition-all hover:scale-[1.02] hover:shadow-lg relative overflow-hidden
+                                            ${(t.status === 'Ganha' || t.status === 'won')
+                                                ? 'bg-[#16a34a] text-white' // Verde Sólido Forte (Green 600)
+                                                : (t.status === 'Perdida' || t.status === 'lost')
+                                                    ? 'bg-[#dc2626] text-white' // Vermelho Sólido Forte (Red 600)
+                                                    : 'bg-[#2563eb] text-white' // Azul Sólido Forte (Blue 600)
+                                            }
                                         `}
                                     >
-                                        <div className="line-clamp-2">
-                                            {t.city && <span className="opacity-80">{t.city.toUpperCase()} - </span>}
-                                            {t.title}
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] leading-tight font-black uppercase tracking-tight">
+                                                {t.city ? `${t.city} - ${t.title}` : t.title}
+                                            </span>
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1 text-[8px] opacity-90 font-bold border-t border-white/20 pt-1">
-                                            {t.tenderNumber && <span>NR: {t.tenderNumber}</span>}
-                                            <span className="ml-auto text-white">{formatCurrency(t.status === 'won' && t.wonValue ? t.wonValue : t.value)}</span>
+
+                                        {/* Linha Divisória Fina e Sutil */}
+                                        <div className="w-full h-[0.5px] bg-white/30 my-0.5"></div>
+
+                                        <div className="flex flex-col w-full mt-auto pt-1 gap-0.5">
+                                            <div className="flex justify-between items-center w-full">
+                                                <span className="text-[8px] opacity-90 font-bold tracking-wide leading-none">
+                                                    NR: {t.tenderNumber || 'S/N'}
+                                                </span>
+                                            </div>
+
+                                            {(t.status === 'Ganha' || t.status === 'won') && t.wonValue ? (
+                                                <>
+                                                    <div className="flex justify-between items-center w-full">
+                                                        <span className="text-[8px] opacity-90 font-bold leading-none">
+                                                            Est: {formatCurrency(t.value)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center w-full">
+                                                        <span className="text-[10px] font-black tracking-tight leading-none text-white">
+                                                            Venc: {formatCurrency(t.wonValue)}
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="flex justify-between items-center w-full">
+                                                    <span className="text-[10px] font-black tracking-tight leading-none">
+                                                        Est: {formatCurrency(t.value)}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </Link>
                                 ))}
@@ -125,12 +159,24 @@ export function CalendarWidget() {
                 })}
             </div>
 
-            {/* Legenda com mais Visibilidade */}
-            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-600 shadow-sm shadow-blue-200"></div> Hoje</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-md bg-blue-500 shadow-sm shadow-blue-100"></div> Em Andamento</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-md bg-green-600 shadow-sm shadow-green-100"></div> Arrematado (Ganha)</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-md bg-red-600 shadow-sm shadow-red-100"></div> Perdida</div>
+            {/* Legenda com mais Visibilidade - Estilo Bolha */}
+            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-4 text-[10px] font-black uppercase text-slate-400 tracking-widest justify-center sm:justify-start">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
+                    Hoje
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></div>
+                    Em Andamento
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#16a34a]"></div>
+                    Arrematado (Ganha)
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#dc2626]"></div>
+                    Perdida
+                </div>
             </div>
 
             <style jsx>{`
