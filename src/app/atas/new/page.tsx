@@ -36,6 +36,7 @@ function NewAtaContent() {
         canAdhere: false,
         pdfUrl: "",
         attachmentUrl: "",
+        observations: "",
         company: "",
         isExtended: false,
         value: 0
