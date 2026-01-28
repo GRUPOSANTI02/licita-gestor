@@ -14,7 +14,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true); // Login desativado (Sempre logado)
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const router = useRouter();
     const pathname = usePathname();
@@ -28,18 +28,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Verificar se já está logado
-        const authStatus = localStorage.getItem("licita_gestor_auth") || sessionStorage.getItem("licita_gestor_auth");
-        if (authStatus === "true") {
-            setIsAuthenticated(true);
-        }
+        // const authStatus = localStorage.getItem("licita_gestor_auth") || sessionStorage.getItem("licita_gestor_auth");
+        // if (authStatus === "true") {
+        //     setIsAuthenticated(true);
+        // }
+
+        // FORÇAR LOGIN PARA TESTES
+        setIsAuthenticated(true);
         setIsLoading(false);
     }, []);
 
     useEffect(() => {
         if (!isLoading) {
-            if (!isAuthenticated && pathname !== "/login") {
-                router.push("/login");
-            } else if (isAuthenticated && pathname === "/login") {
+            // Lógica de proteção desativada
+            // if (!isAuthenticated && pathname !== "/login") {
+            //     router.push("/login");
+            // } else 
+
+            if (isAuthenticated && pathname === "/login") {
                 router.push("/");
             }
         }
