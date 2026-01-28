@@ -54,7 +54,8 @@ export default function AtasPage() {
             else active++;
 
             const tender = tenders.find(t => t.id === ata.tenderId);
-            const value = tender ? (tender.wonValue || tender.value || 0) : 0;
+            // Prioriza o valor definido na Ata, depois tenta o valor ganho da licitação, depois o valor estimado
+            const value = ata.value || (tender ? (tender.wonValue || tender.value || 0) : 0);
 
             if (ata.isExtended) {
                 extendedAtas++;
