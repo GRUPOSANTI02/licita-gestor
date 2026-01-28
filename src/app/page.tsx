@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { useTenders } from "@/context/TenderContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ArrowUpRight, TrendingUp, Users, AlertCircle, Plus, Clock, MapPin, FileText, MessageCircle } from "lucide-react";
+import { ArrowUpRight, TrendingUp, Users, AlertCircle, Plus, Clock, MapPin, FileText, MessageCircle, ChevronRight } from "lucide-react";
 import { StatCard } from "@/components/features/StatCard";
 import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
 import { SalesChart } from "@/components/features/SalesChart";
@@ -25,7 +25,6 @@ export default function Dashboard() {
             .sort((a, b) => new Date(a.nextSessionDate!).getTime() - new Date(b.nextSessionDate!).getTime());
     }, [tenders]);
 
-    // Calcular estatísticas reais considerando rótulos em Português e Inglês
     const totalValue = tenders.reduce((acc, t) => acc + (t.value || 0), 0);
     const activeTendersList = tenders.filter(t =>
         t.status === 'in_progress' ||
@@ -36,12 +35,10 @@ export default function Dashboard() {
     const wonTenders = tenders.filter(t => t.status === 'won' || t.status === 'Ganha');
     const totalWonRevenue = wonTenders.reduce((acc, t) => acc + (t.wonValue || t.value || 0), 0);
 
-    // Ordenar por data mais próxima (Urgentes)
     const urgentTenders = [...activeTendersList]
         .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
         .slice(0, 4);
 
-    // Preparar componentes para o Grid Customizável
     const statCards = [
         {
             id: 'stat-opportunities',
@@ -99,47 +96,41 @@ export default function Dashboard() {
         }
     ];
 
+    // Novo Widget Compacto de Sessões
     const sessionAlertWidget = {
-        id: 'session-alert',
+        id: 'session-alert-compact',
         colSpan: 'col-span-4',
-        title: 'Sessões Agendadas',
+        title: 'Próximas Sessões',
         component: (
-            <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm h-full">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Clock className="w-32 h-32 text-amber-600" />
+            <div className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-3xl p-4 overflow-x-auto">
+                <div className="flex-shrink-0 flex items-center gap-2 pr-4 border-r border-amber-200">
+                    <div className="p-2 bg-amber-500 rounded-xl text-white shadow-lg shadow-amber-500/20">
+                        <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <h3 className="text-amber-900 font-black text-xs uppercase tracking-widest leading-tight">Retomadas</h3>
+                        <p className="text-amber-700/60 text-[10px] font-bold">Não perca o horário</p>
+                    </div>
                 </div>
-                <div className="relative z-10 flex flex-col h-full gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
-                            <Clock className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="text-amber-900 font-bold text-lg leading-tight">Sessões & Retomadas</h3>
-                            <p className="text-amber-700/70 text-xs font-medium">Atenção aos horários agendados.</p>
-                        </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                        {scheduledSessions.map(t => (
-                            <Link key={t.id} href={`/tenders/${t.id}/edit?returnTo=/`} className="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-sm hover:shadow-md transition-all border border-amber-100 hover:border-amber-300 hover:scale-[1.01] group/card flex flex-col justify-between h-24">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-[9px] font-black uppercase tracking-widest bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">
-                                        {formatDate(t.nextSessionDate!)}
+                <div className="flex-1 flex items-center gap-3">
+                    {scheduledSessions.map(t => (
+                        <Link key={t.id} href={`/tenders/${t.id}/edit?returnTo=/`} className="flex-shrink-0 flex items-center gap-4 bg-white px-4 py-3 rounded-2xl border border-amber-100 hover:border-amber-300 hover:scale-105 transition-all shadow-sm group min-w-[240px]">
+                            <div className="flex flex-col w-full">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
+                                        {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() ? 'HOJE' : formatDate(t.nextSessionDate!).split(' ')[0]} • {new Date(t.nextSessionDate!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    <div className="flex items-center gap-1 text-slate-400">
+                                        <MapPin className="w-3 h-3" />
+                                        <span className="text-[9px] font-bold uppercase">{t.city}</span>
                                     </div>
-                                    {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() && (
-                                        <div className="flex items-center gap-1 bg-red-100 px-2 py-0.5 rounded-full">
-                                            <span className="animate-pulse w-1.5 h-1.5 bg-red-600 rounded-full"></span>
-                                            <span className="text-[8px] font-black text-red-600 uppercase">Hoje</span>
-                                        </div>
-                                    )}
                                 </div>
-                                <div>
-                                    <div className="font-bold text-slate-800 truncate text-sm mb-0.5 group-hover/card:text-blue-600 transition-colors uppercase italic">{t.title}</div>
-                                    <div className="text-[10px] text-slate-500 font-medium truncate">{t.agency}</div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                                <span className="text-xs font-black text-slate-800 truncate w-full group-hover:text-blue-600 transition-colors uppercase italic">{t.title}</span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500" />
+                        </Link>
+                    ))}
                 </div>
             </div>
         )
@@ -257,6 +248,7 @@ export default function Dashboard() {
     // Lista final de itens para o dashboard
     const dashboardItems = [
         ...statCards,
+        ...(scheduledSessions.length > 0 ? [sessionAlertWidget] : []),
         calendarWidget,
         urgentWidget,
         chartWidget
@@ -303,50 +295,6 @@ export default function Dashboard() {
                         </Link>
                     </div>
                 </div>
-
-                {/* ALERTA DE SESSÕES (FIXO NO TOPO) */}
-                {scheduledSessions.length > 0 && (
-                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <Clock className="w-32 h-32 text-amber-600" />
-                            </div>
-                            <div className="relative z-10 flex flex-col gap-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
-                                        <Clock className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-amber-900 font-bold text-lg leading-tight">Sessões & Retomadas</h3>
-                                        <p className="text-amber-700/70 text-xs font-medium">Atenção aos horários agendados.</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                                    {scheduledSessions.map(t => (
-                                        <Link key={t.id} href={`/tenders/${t.id}/edit?returnTo=/`} className="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-sm hover:shadow-md transition-all border border-amber-100 hover:border-amber-300 hover:scale-[1.01] group/card flex flex-col justify-between h-24">
-                                            <div className="flex items-center justify-between">
-                                                <div className="text-[9px] font-black uppercase tracking-widest bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">
-                                                    {formatDate(t.nextSessionDate!)}
-                                                </div>
-                                                {new Date(t.nextSessionDate!).toDateString() === new Date().toDateString() && (
-                                                    <div className="flex items-center gap-1 bg-red-100 px-2 py-0.5 rounded-full">
-                                                        <span className="animate-pulse w-1.5 h-1.5 bg-red-600 rounded-full"></span>
-                                                        <span className="text-[8px] font-black text-red-600 uppercase">Hoje</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <div className="font-bold text-slate-800 truncate text-sm mb-0.5 group-hover/card:text-blue-600 transition-colors uppercase italic">{t.title}</div>
-                                                <div className="text-[10px] text-slate-500 font-medium truncate">{t.agency}</div>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Componente de Dashboard Editável */}
                 <EditableDashboard initialItems={dashboardItems} />
