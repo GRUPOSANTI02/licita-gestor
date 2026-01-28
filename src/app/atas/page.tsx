@@ -325,6 +325,13 @@ export default function AtasPage() {
                                                     {formatDate(ata.endDate)}
                                                 </div>
                                             </div>
+                                            {/* VALOR DA ATA */}
+                                            <div className="col-span-2 pt-2 border-t border-slate-50 mt-2">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor Total</p>
+                                                <p className="font-black text-slate-800 text-lg">
+                                                    {ata.value ? formatCurrency(ata.value) : <span className="text-slate-300 font-medium text-sm">R$ 0,00 (Não informado)</span>}
+                                                </p>
+                                            </div>
                                         </div>
 
                                         <div className="flex gap-2 mt-4 flex-wrap">

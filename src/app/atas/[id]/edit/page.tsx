@@ -363,7 +363,20 @@ export default function EditAtaPage({ params }: { params: { id: string } }) {
                         <span className="text-xs font-black uppercase tracking-widest text-slate-500">Valores e Datas</span>
                     </div>
 
+                    {/* LINHA DE IDENTIFICAÇÃO PRINCIPAL: NÚMERO E VALOR */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Número da Ata</label>
+                            <input
+                                required
+                                type="text"
+                                placeholder="Ex: 123/2026"
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
+                                value={form.ataNumber}
+                                onChange={(e) => setForm({ ...form, ataNumber: e.target.value })}
+                            />
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400">Valor da Ata (R$)</label>
                             <input
@@ -378,31 +391,18 @@ export default function EditAtaPage({ params }: { params: { id: string } }) {
                                 }}
                             />
                         </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Número da Ata</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="Ex: 123/2026"
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
-                                value={form.ataNumber}
-                                onChange={(e) => setForm({ ...form, ataNumber: e.target.value })}
-                            />
-                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Link Externo (Drive/Dropbox)</label>
-                            <input
-                                type="url"
-                                placeholder="https://..."
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
-                                value={form.pdfUrl}
-                                onChange={(e) => setForm({ ...form, pdfUrl: e.target.value })}
-                            />
-                        </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Link Externo (Drive/Dropbox)</label>
+                        <input
+                            type="url"
+                            placeholder="https://..."
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
+                            value={form.pdfUrl}
+                            onChange={(e) => setForm({ ...form, pdfUrl: e.target.value })}
+                        />
+                    </div>
 
                         {/* UPLOAD DE ARQUIVO */}
                         <div className="space-y-2">
@@ -536,8 +536,8 @@ export default function EditAtaPage({ params }: { params: { id: string } }) {
                     )}
                 </button>
             </div>
-        </form>
-            </div>
-        </div>
+        </form >
+            </div >
+        </div >
     );
 }

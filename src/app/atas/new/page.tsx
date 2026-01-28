@@ -282,7 +282,20 @@ function NewAtaContent() {
                         <span className="text-xs font-black uppercase tracking-widest text-slate-500">Valores e Datas</span>
                     </div>
 
+                    {/* LINHA DE IDENTIFICAÇÃO PRINCIPAL: NÚMERO E VALOR - REPOSICIONADO PARA VISIBILIDADE */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Número da Ata</label>
+                            <input
+                                required
+                                type="text"
+                                placeholder="Ex: 123/2026"
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
+                                value={form.ataNumber}
+                                onChange={(e) => setForm({ ...form, ataNumber: e.target.value })}
+                            />
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400">Valor da Ata (R$)</label>
                             <input
@@ -295,42 +308,6 @@ function NewAtaContent() {
                                     setDisplayValue(masked);
                                     setForm({ ...form, value: parseCurrencyToNumber(masked) });
                                 }}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Número da Ata</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="Ex: 123/2026"
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
-                                value={form.ataNumber}
-                                onChange={(e) => setForm({ ...form, ataNumber: e.target.value })}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Início da Vigência</label>
-                            <input
-                                required
-                                type="date"
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
-                                value={form.startDate}
-                                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Fim da Vigência</label>
-                            <input
-                                required
-                                type="date"
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500"
-                                value={form.endDate}
-                                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                             />
                         </div>
                     </div>
@@ -418,8 +395,8 @@ function NewAtaContent() {
                 </button>
             </div>
         </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 
