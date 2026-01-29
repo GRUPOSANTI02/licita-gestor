@@ -29,10 +29,27 @@ export default function EditTenderPage() {
         nextSessionDate: "",
     });
 
+    // Helper para normalizar status de qualquer jeito
+    const normalizeStatus = (s: string | undefined): TenderStatus => {
+        if (!s) return 'pending';
+        const clean = String(s).toLowerCase().trim();
+
+        if (clean.includes('nao participou') || clean.includes('não participou') || clean === 'not_participated') return 'not_participated';
+        if (clean.includes('em andamento') || clean === 'running') return 'running';
+        if (clean === 'ganha' || clean === 'won') return 'won';
+        if (clean === 'perdida' || clean === 'lost') return 'lost';
+        if (clean.includes('em an') || clean === 'in_progress') return 'in_progress';
+        if (clean === 'aguardando' || clean === 'pending') return 'pending';
+
+        return clean as TenderStatus;
+    };
+
     useEffect(() => {
         if (!isLoading) {
             const tender = tenders.find((t) => t.id === id);
             if (tender) {
+                const safeStatus = normalizeStatus(tender.status);
+
                 setForm({
                     tenderNumber: tender.tenderNumber || "",
                     title: tender.title,
@@ -40,12 +57,7 @@ export default function EditTenderPage() {
                     city: tender.city,
                     value: maskCurrency(Math.round(tender.value * 100).toString()),
                     wonValue: tender.wonValue ? maskCurrency(Math.round(tender.wonValue * 100).toString()) : "",
-                    status: (tender.status === 'Não Participou' ? 'not_participated' :
-                        tender.status === 'Em Andamento' ? 'running' :
-                            tender.status === 'Ganha' ? 'won' :
-                                tender.status === 'Perdida' ? 'lost' :
-                                    tender.status === 'Em Análise' ? 'in_progress' :
-                                        tender.status === 'Aguardando' ? 'pending' : tender.status) as TenderStatus,
+                    status: safeStatus,
                     deadline: tender.deadline ? new Date(new Date(tender.deadline).getTime() - (new Date(tender.deadline).getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
                     description: tender.description || "",
                     editalUrl: tender.editalUrl || "",
