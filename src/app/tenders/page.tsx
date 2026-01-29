@@ -9,21 +9,29 @@ export default function TendersPage() {
     const { tenders, deleteTender } = useTenders();
 
     const getStatusColor = (status: string) => {
-        switch (status) {
-            case "won": case "Ganha": return "bg-green-100 text-green-700 border-green-200";
-            case "lost": case "Perdida": return "bg-red-100 text-red-700 border-red-200";
-            case "in_progress": case "Em Análise": return "bg-blue-100 text-blue-700 border-blue-200";
-            case "pending": case "Aguardando": return "bg-yellow-100 text-yellow-700 border-yellow-200";
+        const s = String(status).toLowerCase().trim();
+        if (s.includes('não participou') || s.includes('nao participou') || s === 'not_participated') return "bg-slate-100 text-slate-500 border-slate-200";
+        if (s.includes('em andamento') || s === 'running') return "bg-amber-100 text-amber-700 border-amber-200";
+
+        switch (s) {
+            case "won": case "ganha": return "bg-green-100 text-green-700 border-green-200";
+            case "lost": case "perdida": return "bg-red-100 text-red-700 border-red-200";
+            case "in_progress": case "em análise": case "em analise": return "bg-blue-100 text-blue-700 border-blue-200";
+            case "pending": case "aguardando": return "bg-yellow-100 text-yellow-700 border-yellow-200";
             default: return "bg-yellow-100 text-yellow-700 border-yellow-200";
         }
     };
 
     const getStatusLabel = (status: string) => {
-        switch (status) {
-            case 'won': case 'Ganha': return 'Ganha';
-            case 'lost': case 'Perdida': return 'Perdida';
-            case 'in_progress': case 'Em Análise': return 'Em Análise';
-            case 'pending': case 'Aguardando': return 'Aguardando';
+        const s = String(status).toLowerCase().trim();
+        if (s.includes('não participou') || s.includes('nao participou') || s === 'not_participated') return 'Não Participou';
+        if (s.includes('em andamento') || s === 'running') return 'Em Andamento';
+
+        switch (s) {
+            case 'won': case 'ganha': return 'Ganha';
+            case 'lost': case 'perdida': return 'Perdida';
+            case 'in_progress': case 'em análise': case 'em analise': return 'Em Análise';
+            case 'pending': case 'aguardando': return 'Aguardando';
             default: return 'Aguardando';
         }
     };
