@@ -52,8 +52,8 @@ export function AtaCard({ data, onClick }: AtaCardProps) {
                 <div className="flex-1 md:w-[65%] p-4 space-y-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                                Nº {data.numero}
+                            <span className="text-[10px] font-black text-white bg-slate-800 px-2 py-0.5 rounded uppercase tracking-tighter shadow-sm">
+                                ATA Nº {data.numero}
                             </span>
 
                             {isNew && (
