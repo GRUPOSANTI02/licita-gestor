@@ -77,12 +77,13 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             setAtas([]);
         }
 
-        // Se houver Nuvem, carrega Tenders (Atas por enquanto apenas local para simplificar, expansível depois)
+        // Se houver Nuvem, carrega Tenders E Atas
         if (isSupabaseConfigured) {
             try {
-                const { data, error } = await supabase.from('tenders').select('*').order('deadline', { ascending: true });
-                if (!error && data) {
-                    const mappedData: Tender[] = data.map((t: any) => ({
+                // TENDERS
+                const { data: tendersData, error: tendersError } = await supabase.from('tenders').select('*').order('deadline', { ascending: true });
+                if (!tendersError && tendersData) {
+                    const mappedTenders: Tender[] = tendersData.map((t: any) => ({
                         id: t.id,
                         tenderNumber: t.tender_number,
                         title: t.title,
@@ -100,38 +101,65 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                         nextSessionDate: t.next_session_date
                     }));
                     setTenders(prev => {
-                        // MERGE INTELIGENTE: Preservar versão local se for mais recente que a nuvem
-                        // Isso evita que alterações recentes sejam revertidas se a nuvem estiver atrasada ou falhar
-
-                        const merged = mappedData.map(cloudTender => {
+                        const merged = mappedTenders.map(cloudTender => {
                             const localTender = prev.find(p => p.id === cloudTender.id);
                             if (localTender && localTender.updatedAt && cloudTender.updatedAt) {
                                 const localTime = new Date(localTender.updatedAt).getTime();
                                 const cloudTime = new Date(cloudTender.updatedAt).getTime();
-
-                                // Se local for mais novo (margem de erro 2s), mantém local
-                                if (localTime > cloudTime + 2000) {
-                                    console.log("Mantendo versão local mais recente:", localTender.title);
-                                    return localTender;
-                                }
+                                if (localTime > cloudTime + 2000) return localTender;
                             }
                             return cloudTender;
                         });
-
-                        // Se houver novos itens locais criados offline (não existem na nuvem), deve mantê-los?
-                        // Por enquanto, assumimos que addTender salva na nuvem.
-                        // Mas na inicialização, prev vem do localStorage.
-                        // Vamos adicionar itens que estão no prev mas (ainda) não na nuvem?
-                        // Risco de duplicar se IDs mudarem, mas usamos UUID.
-                        const cloudIds = new Set(mappedData.map(t => t.id));
+                        const cloudIds = new Set(mappedTenders.map(t => t.id));
                         const localOnly = prev.filter(p => !cloudIds.has(p.id));
-
                         const final = [...merged, ...localOnly];
-
                         localStorage.setItem("licita_gestor_data", JSON.stringify(final));
                         return final;
                     });
                 }
+
+                // ATAS
+                const { data: atasData, error: atasError } = await supabase.from('atas').select('*').order('created_at', { ascending: false });
+                if (!atasError && atasData) {
+                    const mappedAtas: Ata[] = atasData.map((a: any) => ({
+                        id: a.id,
+                        tenderId: a.tender_id,
+                        manualTitle: a.manual_title,
+                        manualAgency: a.manual_agency,
+                        manualCity: a.manual_city,
+                        value: Number(a.value),
+                        ataNumber: a.ata_number,
+                        startDate: a.start_date,
+                        endDate: a.end_date,
+                        canExtend: a.can_extend,
+                        canAdhere: a.can_adhere,
+                        pdfUrl: a.pdf_url,
+                        attachmentUrl: a.attachment_url,
+                        observations: a.observations,
+                        isExtended: a.is_extended,
+                        company: a.company,
+                        createdAt: a.created_at,
+                        updatedAt: a.updated_at,
+                    }));
+
+                    setAtas(prev => {
+                        const merged = mappedAtas.map(cloudAta => {
+                            const localAta = prev.find(p => p.id === cloudAta.id);
+                            if (localAta && localAta.updatedAt && cloudAta.updatedAt) {
+                                const localTime = new Date(localAta.updatedAt).getTime();
+                                const cloudTime = new Date(cloudAta.updatedAt).getTime();
+                                if (localTime > cloudTime + 2000) return localAta;
+                            }
+                            return cloudAta;
+                        });
+                        const cloudIds = new Set(mappedAtas.map(a => a.id));
+                        const localOnly = prev.filter(p => !cloudIds.has(p.id));
+                        const final = [...merged, ...localOnly];
+                        localStorage.setItem("licita_gestor_atas", JSON.stringify(final));
+                        return final;
+                    });
+                }
+
             } catch (e) {
                 console.error("Erro Nuvem", e);
             }
@@ -264,6 +292,7 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
     };
 
     // --- AÇÕES DE ATAS ---
+    // --- AÇÕES DE ATAS ---
     const addAta = async (data: any) => {
         const newAta: Ata = {
             ...data,
@@ -271,16 +300,81 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
-        setAtas(prev => [newAta, ...prev]);
-        // Salva local via useEffect
+
+        setAtas(prev => {
+            const updated = [newAta, ...prev];
+            localStorage.setItem("licita_gestor_atas", JSON.stringify(updated));
+            return updated;
+        });
+
+        if (isSupabaseConfigured) {
+            const supabaseData = {
+                id: newAta.id,
+                tender_id: data.tenderId,
+                manual_title: data.manualTitle,
+                manual_agency: data.manualAgency,
+                manual_city: data.manualCity,
+                value: data.value,
+                ata_number: data.ataNumber,
+                start_date: data.startDate,
+                end_date: data.endDate,
+                can_extend: data.canExtend,
+                can_adhere: data.canAdhere,
+                pdf_url: data.pdfUrl,
+                attachment_url: data.attachmentUrl,
+                observations: data.observations,
+                is_extended: data.isExtended,
+                company: data.company,
+                updated_at: newAta.updatedAt
+            };
+
+            const { error } = await supabase.from('atas').insert([supabaseData]);
+            if (error) console.error("Erro ao salvar Ata no Supabase:", error);
+        }
     };
 
     const updateAta = async (id: string, data: Partial<Ata>) => {
-        setAtas(prev => prev.map(a => (a.id === id ? { ...a, ...data, updatedAt: new Date().toISOString() } : a)));
+        const updates = { ...data, updatedAt: new Date().toISOString() };
+
+        setAtas(prev => {
+            const updated = prev.map(a => (a.id === id ? { ...a, ...updates } : a));
+            localStorage.setItem("licita_gestor_atas", JSON.stringify(updated));
+            return updated;
+        });
+
+        if (isSupabaseConfigured) {
+            const supabaseData: any = { updated_at: updates.updatedAt };
+            if (data.tenderId !== undefined) supabaseData.tender_id = data.tenderId;
+            if (data.manualTitle !== undefined) supabaseData.manual_title = data.manualTitle;
+            if (data.manualAgency !== undefined) supabaseData.manual_agency = data.manualAgency;
+            if (data.manualCity !== undefined) supabaseData.manual_city = data.manualCity;
+            if (data.value !== undefined) supabaseData.value = data.value;
+            if (data.ataNumber !== undefined) supabaseData.ata_number = data.ataNumber;
+            if (data.startDate !== undefined) supabaseData.start_date = data.startDate;
+            if (data.endDate !== undefined) supabaseData.end_date = data.endDate;
+            if (data.canExtend !== undefined) supabaseData.can_extend = data.canExtend;
+            if (data.canAdhere !== undefined) supabaseData.can_adhere = data.canAdhere;
+            if (data.pdfUrl !== undefined) supabaseData.pdf_url = data.pdfUrl;
+            if (data.attachmentUrl !== undefined) supabaseData.attachment_url = data.attachmentUrl;
+            if (data.observations !== undefined) supabaseData.observations = data.observations;
+            if (data.isExtended !== undefined) supabaseData.is_extended = data.isExtended;
+            if (data.company !== undefined) supabaseData.company = data.company;
+
+            const { error } = await supabase.from('atas').update(supabaseData).eq('id', id);
+            if (error) console.error("Erro ao atualizar Ata no Supabase:", error);
+        }
     };
 
     const deleteAta = async (id: string) => {
-        setAtas(prev => prev.filter(a => a.id !== id));
+        setAtas(prev => {
+            const updated = prev.filter(a => a.id !== id);
+            localStorage.setItem("licita_gestor_atas", JSON.stringify(updated));
+            return updated;
+        });
+
+        if (isSupabaseConfigured) {
+            await supabase.from('atas').delete().eq('id', id);
+        }
     };
 
     return (
