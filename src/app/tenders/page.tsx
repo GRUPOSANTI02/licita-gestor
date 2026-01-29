@@ -9,29 +9,31 @@ export default function TendersPage() {
     const { tenders, deleteTender } = useTenders();
 
     const getStatusColor = (status: string) => {
-        const s = String(status).toLowerCase().trim();
-        if (s.includes('não participou') || s.includes('nao participou') || s === 'not_participated') return "bg-slate-100 text-slate-500 border-slate-200";
-        if (s.includes('em andamento') || s === 'running') return "bg-amber-100 text-amber-700 border-amber-200";
+        const s = String(status || '').toLowerCase().trim();
+        if (s === 'not_participated' || s.includes('não participou') || s.includes('nao participou')) {
+            return "bg-slate-100 text-slate-500 border-slate-200"; // CINZA
+        }
+        if (s === 'running' || s.includes('em andamento')) {
+            return "bg-amber-100 text-amber-700 border-amber-200"; // LARANJA
+        }
 
         switch (s) {
             case "won": case "ganha": return "bg-green-100 text-green-700 border-green-200";
             case "lost": case "perdida": return "bg-red-100 text-red-700 border-red-200";
             case "in_progress": case "em análise": case "em analise": return "bg-blue-100 text-blue-700 border-blue-200";
-            case "pending": case "aguardando": return "bg-yellow-100 text-yellow-700 border-yellow-200";
-            default: return "bg-yellow-100 text-yellow-700 border-yellow-200";
+            default: return "bg-yellow-100 text-yellow-700 border-yellow-200"; // Pending/Default
         }
     };
 
     const getStatusLabel = (status: string) => {
-        const s = String(status).toLowerCase().trim();
-        if (s.includes('não participou') || s.includes('nao participou') || s === 'not_participated') return 'Não Participou';
-        if (s.includes('em andamento') || s === 'running') return 'Em Andamento';
+        const s = String(status || '').toLowerCase().trim();
+        if (s === 'not_participated' || s.includes('não participou') || s.includes('nao participou')) return 'Não Participou';
+        if (s === 'running' || s.includes('em andamento')) return 'Em Andamento';
 
         switch (s) {
             case 'won': case 'ganha': return 'Ganha';
             case 'lost': case 'perdida': return 'Perdida';
             case 'in_progress': case 'em análise': case 'em analise': return 'Em Análise';
-            case 'pending': case 'aguardando': return 'Aguardando';
             default: return 'Aguardando';
         }
     };
@@ -40,7 +42,7 @@ export default function TendersPage() {
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Minhas Licitações</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">Minhas Licitações <span className="text-sm bg-green-500 text-white px-2 py-1 rounded-full align-middle ml-2">V6.0 FINAL</span></h1>
                     <p className="text-slate-500">Gerencie todas as suas oportunidades</p>
                 </div>
                 <Link
