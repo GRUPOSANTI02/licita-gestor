@@ -96,22 +96,31 @@ export default function EditTenderPage() {
         // Se for "not_participated", garante que vai assim
         const finalStatus = form.status;
 
-        await updateTender(id, {
-            tenderNumber: form.tenderNumber,
-            title: form.title,
-            agency: form.agency,
-            city: form.city,
-            value: parseCurrencyToNumber(form.value) || 0,
-            wonValue: finalStatus === 'won' ? (parseCurrencyToNumber(form.wonValue) || 0) : undefined,
-            status: finalStatus,
-            deadline: form.deadline ? new Date(form.deadline).toISOString() : undefined, // Salva como ISO UTC
-            description: form.description,
-            editalUrl: form.editalUrl,
-            nextSessionDate: form.nextSessionDate ? new Date(form.nextSessionDate).toISOString() : undefined, // Salva como ISO UTC
-        });
+        try {
+            await updateTender(id, {
+                tenderNumber: form.tenderNumber,
+                title: form.title,
+                agency: form.agency,
+                city: form.city,
+                value: parseCurrencyToNumber(form.value) || 0,
+                wonValue: finalStatus === 'won' ? (parseCurrencyToNumber(form.wonValue) || 0) : undefined,
+                status: finalStatus,
+                deadline: form.deadline ? new Date(form.deadline).toISOString() : undefined, // Salva como ISO UTC
+                description: form.description,
+                editalUrl: form.editalUrl,
+                nextSessionDate: form.nextSessionDate ? new Date(form.nextSessionDate).toISOString() : undefined, // Salva como ISO UTC
+            });
 
-        // Alerta visual para o usuário
-        alert("Licitação salva com sucesso! (Status: " + (finalStatus === 'not_participated' ? 'Não Participou' : finalStatus) + ")");
+            // Alerta visual para o usuário
+            alert("Licitação salva com sucesso! (Status: " + (finalStatus === 'not_participated' ? 'Não Participou' : finalStatus) + ")");
+
+            const returnTo = searchParams.get("returnTo");
+            router.push(returnTo || "/tenders");
+
+        } catch (error: any) {
+            console.error("Erro ao salvar:", error);
+            alert(`Erro ao salvar licitação: ${error.message || "Tente novamente."}`);
+        }
 
         const returnTo = searchParams.get("returnTo");
         router.push(returnTo || "/tenders");

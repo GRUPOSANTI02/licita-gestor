@@ -99,8 +99,38 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                         updatedAt: t.updated_at,
                         nextSessionDate: t.next_session_date
                     }));
-                    setTenders(mappedData);
-                    localStorage.setItem("licita_gestor_data", JSON.stringify(mappedData));
+                    setTenders(prev => {
+                        // MERGE INTELIGENTE: Preservar versão local se for mais recente que a nuvem
+                        // Isso evita que alterações recentes sejam revertidas se a nuvem estiver atrasada ou falhar
+
+                        const merged = mappedData.map(cloudTender => {
+                            const localTender = prev.find(p => p.id === cloudTender.id);
+                            if (localTender && localTender.updatedAt && cloudTender.updatedAt) {
+                                const localTime = new Date(localTender.updatedAt).getTime();
+                                const cloudTime = new Date(cloudTender.updatedAt).getTime();
+
+                                // Se local for mais novo (margem de erro 2s), mantém local
+                                if (localTime > cloudTime + 2000) {
+                                    console.log("Mantendo versão local mais recente:", localTender.title);
+                                    return localTender;
+                                }
+                            }
+                            return cloudTender;
+                        });
+
+                        // Se houver novos itens locais criados offline (não existem na nuvem), deve mantê-los?
+                        // Por enquanto, assumimos que addTender salva na nuvem.
+                        // Mas na inicialização, prev vem do localStorage.
+                        // Vamos adicionar itens que estão no prev mas (ainda) não na nuvem?
+                        // Risco de duplicar se IDs mudarem, mas usamos UUID.
+                        const cloudIds = new Set(mappedData.map(t => t.id));
+                        const localOnly = prev.filter(p => !cloudIds.has(p.id));
+
+                        const final = [...merged, ...localOnly];
+
+                        localStorage.setItem("licita_gestor_data", JSON.stringify(final));
+                        return final;
+                    });
                 }
             } catch (e) {
                 console.error("Erro Nuvem", e);
@@ -159,23 +189,28 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
     };
 
     const updateTender = async (id: string, data: Partial<Tender>) => {
-        // Atualiza estado local imediatamente e força persistência
-        console.log("Forçando atualização:", id, data);
+        // Prepare updated data with valid ISO string for dates if present
+        const updates = { ...data, updatedAt: new Date().toISOString() };
+
+        // 1. Atualizar estado local imediatamente
         setTenders(prev => {
-            const updated = prev.map(t => (t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t));
+            const updatedList = prev.map(t => (t.id === id ? { ...t, ...updates } : t));
+            // Atualizar localStorage imediatamente para garantir persistência local
             try {
-                localStorage.setItem("licita_gestor_data", JSON.stringify(updated));
+                localStorage.setItem("licita_gestor_data", JSON.stringify(updatedList));
             } catch (err) {
-                console.error("Erro critico ao salvar:", err);
+                console.error("Erro ao salvar no LocalStorage:", err);
             }
-            return updated;
+            return updatedList;
         });
 
-        // Persiste no Supabase se configurado
+        // 2. Persistir no Supabase se configurado
         if (isSupabaseConfigured) {
+            console.log("Salvando na nuvem (Supabase)...", id);
+
             // Mapeamento camelCase -> snake_case para o Supabase
             const supabaseData: any = {
-                updated_at: new Date().toISOString()
+                updated_at: updates.updatedAt
             };
 
             if (data.tenderNumber !== undefined) supabaseData.tender_number = data.tenderNumber;
@@ -191,7 +226,13 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             if (data.nextSessionDate !== undefined) supabaseData.next_session_date = data.nextSessionDate;
 
 
-            await supabase.from('tenders').update(supabaseData).eq('id', id);
+            const { error } = await supabase.from('tenders').update(supabaseData).eq('id', id);
+
+            if (error) {
+                console.error("Erro CRÍTICO ao atualizar Supabase:", error);
+                // Reverter? Opcional. Por enquanto, vamos lançar o erro para o UI saber.
+                throw new Error(`Erro ao salvar na nuvem: ${error.message || error.details}`);
+            }
         }
     };
 
