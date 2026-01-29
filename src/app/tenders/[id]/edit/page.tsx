@@ -101,7 +101,7 @@ export default function EditTenderPage() {
 
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10">
                 <div className="mb-10">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Editar Licitação</h1>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Editar Licitação <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full ml-2">v5.0 Fix</span></h1>
                     <p className="text-slate-500 font-medium">Atualize os detalhes da sua disputa.</p>
                 </div>
 
