@@ -3,279 +3,253 @@
 import { useTenders } from "@/context/TenderContext";
 import {
     BarChart3,
-    PieChart,
     TrendingUp,
     Calendar,
     Target,
-    DollarSign,
     Building2,
-    AlertTriangle,
     Download,
-    Filter
+    ChevronDown,
+    Activity,
+    Briefcase,
+    Star,
+    RefreshCw,
+    MapPin,
+    ArrowLeft,
+    Share2,
+    ShieldCheck,
+    Trophy
 } from "lucide-react";
-import { useMemo } from "react";
-import { formatDate } from "@/lib/utils";
+import { useMemo, useState } from "react";
+import { formatDate, formatCurrency } from "@/lib/utils";
 
 export default function ReportsPage() {
-    const { tenders, atas } = useTenders();
+    const { tenders = [], atas = [] } = useTenders();
+    const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
 
-    // 1. Estatísticas Financeiras
-    const stats = useMemo(() => {
-        const wonTenders = tenders.filter(t => t.status === "won" || t.status === "Ganha");
+    // Lista única de empresas
+    const companies = useMemo(() => {
+        const companyMap = new Map();
 
-        const totalWon = wonTenders
-            .reduce((acc, t) => acc + (t.wonValue || t.value || 0), 0);
-
-        const totalDispute = tenders
-            .filter(t =>
-                t.status === "pending" ||
-                t.status === "Aguardando" ||
-                t.status === "in_progress" ||
-                t.status === "Em Análise"
-            )
-            .reduce((acc, t) => acc + (t.value || 0), 0);
-
-        const winRate = tenders.length > 0
-            ? (wonTenders.length / tenders.length) * 100
-            : 0;
-
-        return { totalWon, totalDispute, winRate };
-    }, [tenders]);
-
-    // 2. Atas por Vencimento (Próximos 90 dias)
-    const expiringAtas = useMemo(() => {
-        const today = new Date();
-        const ninetyDays = new Date();
-        ninetyDays.setDate(today.getDate() + 90);
-
-        return atas
-            .filter(ata => {
-                const end = new Date(ata.endDate);
-                return end >= today && end <= ninetyDays;
-            })
-            .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime());
-    }, [atas]);
-
-    // 3. Top Cidades
-    const topCities = useMemo(() => {
-        const cityMap: Record<string, number> = {};
-        tenders.filter(t => t.status === "won" || t.status === "Ganha").forEach(t => {
-            const city = t.city || "Não Informada";
-            cityMap[city] = (cityMap[city] || 0) + (t.wonValue || t.value || 0);
+        tenders.forEach(t => {
+            if (t.company) {
+                const current = companyMap.get(t.company) || { tenders: 0, value: 0 };
+                companyMap.set(t.company, {
+                    tenders: current.tenders + 1,
+                    value: current.value + (t.wonValue || t.value || 0)
+                });
+            }
         });
 
-        return Object.entries(cityMap)
-            .map(([name, value]) => ({ name, value }))
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 5);
-    }, [tenders]);
+        atas.forEach(a => {
+            if (a.company) {
+                const current = companyMap.get(a.company) || { tenders: 0, value: 0 };
+                // Evitamos duplicar valor se a ata já vem de um tender, mas para simplicidade de visão geral:
+                companyMap.set(a.company, {
+                    tenders: current.tenders,
+                    value: current.value + (a.value || 0)
+                });
+            }
+        });
 
-    // 4. Volume Mensal (Dinamismo nos últimos 6 meses)
-    const monthlyStats = useMemo(() => {
-        const months = [];
-        const today = new Date();
+        return Array.from(companyMap.entries())
+            .map(([name, stats]) => ({ name, ...stats }))
+            .sort((a, b) => b.value - a.value);
+    }, [tenders, atas]);
 
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-            const monthLabel = d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-            const monthIndex = d.getMonth();
-            const yearIndex = d.getFullYear();
+    // Dados Filtrados para o Relatório Individual
+    const reportData = useMemo(() => {
+        if (!selectedCompany) return null;
 
-            const monthTenders = tenders.filter(t => {
-                const dead = new Date(t.deadline);
-                return dead.getMonth() === monthIndex && dead.getFullYear() === yearIndex;
-            });
+        const cTenders = tenders.filter(t => t.company === selectedCompany);
+        const cAtas = atas.filter(a => a.company === selectedCompany);
 
-            months.push({
-                month: monthLabel,
-                total: monthTenders.length,
-                won: monthTenders.filter(t => t.status === 'won' || t.status === 'Ganha').length
-            });
-        }
-        return months;
-    }, [tenders]);
+        const wonTenders = cTenders.filter(t => t.status === "won" || t.status === "Ganha" || t.status === "ATIVA");
+        const totalWon = wonTenders.reduce((acc, t) => acc + (t.wonValue || t.value || 0), 0);
 
-    // Calcular o máximo para escala das barras
-    const maxVolume = useMemo(() => {
-        const val = Math.max(...monthlyStats.map(m => m.total), 5); // No mínimo 5 para escala
-        return Math.ceil(val / 5) * 5; // Arredonda para cima múltiplo de 5
-    }, [monthlyStats]);
+        const newAtasVal = cAtas.filter(a => !a.isExtended).reduce((acc, a) => acc + (a.value || 0), 0);
+        const extAtasVal = cAtas.filter(a => a.isExtended).reduce((acc, a) => acc + (a.value || 0), 0);
 
-    return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8 pb-24">
-            {/* ... o resto do código header e cards continua igual ... */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Relatórios de Desempenho</h1>
-                    <p className="text-slate-500 font-medium">Análise estratégica de licitações e contratos.</p>
+        const expAtas = cAtas
+            .filter(a => a.endDate && new Date(a.endDate) > new Date())
+            .sort((a, b) => new Date(a.endDate!).getTime() - new Date(b.endDate!).getTime())
+            .slice(0, 3);
+
+        const cities: Record<string, number> = {};
+        wonTenders.forEach(t => { if (t.city) cities[t.city] = (cities[t.city] || 0) + (t.wonValue || t.value || 0); });
+        const topCities = Object.entries(cities).map(([name, val]) => ({ name, val })).sort((a, b) => b.val - a.val).slice(0, 3);
+
+        return { totalWon, newAtasVal, extAtasVal, expAtas, topCities, totalCount: cTenders.length + cAtas.length };
+    }, [selectedCompany, tenders, atas]);
+
+    // VIEW: SELEÇÃO DE CLIENTE
+    if (!selectedCompany) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto space-y-12 pb-24">
+                <div className="text-center space-y-4 py-10">
+                    <h1 className="text-5xl font-black text-slate-900 tracking-tight italic">Performance de Clientes</h1>
+                    <p className="text-slate-500 font-medium text-lg max-w-2xl mx-auto">
+                        Selecione um de seus clientes gerenciados para visualizar e compartilhar o relatório de desempenho.
+                    </p>
                 </div>
 
-                <button className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-black text-xs uppercase tracking-widest shadow-xl">
-                    <Download className="w-4 h-4" />
-                    Exportar PDF
-                </button>
-            </div>
-
-            {/* CARDS PRINCIPAIS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm transition-transform hover:scale-[1.02]">
-                    <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-4 text-green-600">
-                        <TrendingUp className="w-6 h-6" />
-                    </div>
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Total Arrematado</p>
-                    <h2 className="text-2xl font-black text-slate-800">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.totalWon)}
-                    </h2>
-                </div>
-
-                <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm transition-transform hover:scale-[1.02]">
-                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 text-blue-600">
-                        <Target className="w-6 h-6" />
-                    </div>
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Em Disputa</p>
-                    <h2 className="text-2xl font-black text-slate-800">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.totalDispute)}
-                    </h2>
-                </div>
-
-                <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm transition-transform hover:scale-[1.02]">
-                    <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-4 text-purple-600">
-                        <PieChart className="w-6 h-6" />
-                    </div>
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Taxa de Vitória</p>
-                    <h2 className="text-2xl font-black text-slate-800">
-                        {stats.winRate.toFixed(1)}%
-                    </h2>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* TIMELINE DE VENCIMENTOS */}
-                <div className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Calendar className="w-6 h-6 text-amber-500" />
-                            <h3 className="font-black text-slate-800 uppercase tracking-tight">Vencimentos Próximos</h3>
-                        </div>
-                        <span className="text-[10px] font-black bg-amber-100 text-amber-600 px-3 py-1 rounded-full uppercase">Atas 90 Dias</span>
-                    </div>
-
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                        {expiringAtas.length === 0 ? (
-                            <div className="py-10 text-center text-slate-400 font-bold italic">
-                                Nenhuma ata vencendo em breve.
-                            </div>
-                        ) : (
-                            expiringAtas.map(ata => (
-                                <div key={ata.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-amber-200 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase">ATA Nº {ata.ataNumber}</span>
-                                        <span className="font-bold text-slate-700 truncate max-w-[200px]">
-                                            {tenders.find(t => t.id === ata.tenderId)?.title || ata.manualTitle || "Sem título"}
-                                        </span>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="flex items-center gap-2 text-red-600 font-black text-sm">
-                                            <AlertTriangle className="w-3.5 h-3.5" />
-                                            {formatDate(ata.endDate)}
-                                        </div>
-                                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {companies.map((company) => (
+                        <button
+                            key={company.name}
+                            onClick={() => setSelectedCompany(company.name)}
+                            className="bg-white p-8 rounded-[40px] border-2 border-slate-100 text-left hover:border-amber-500 transition-all hover:shadow-2xl hover:-translate-y-2 group flex flex-col justify-between min-h-[280px]"
+                        >
+                            <div className="space-y-4">
+                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-amber-50 group-hover:scale-110 transition-all">
+                                    <Briefcase className="w-8 h-8 text-slate-400 group-hover:text-amber-500" />
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* RANKING DE CIDADES/FATURAMENTO */}
-                <div className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm space-y-6">
-                    <div className="flex items-center gap-3">
-                        <BarChart3 className="w-6 h-6 text-blue-600" />
-                        <h3 className="font-black text-slate-800 uppercase tracking-tight">Onde você mais ganha</h3>
-                    </div>
-
-                    <div className="space-y-6">
-                        {topCities.length === 0 ? (
-                            <div className="py-10 text-center text-slate-400 font-bold italic">
-                                Sem dados de vitórias para exibir ranking.
+                                <h2 className="text-2xl font-black text-slate-800 leading-tight uppercase italic">{company.name}</h2>
                             </div>
-                        ) : (
-                            topCities.map((city, index) => {
-                                const percentage = topCities[0].value > 0 ? (city.value / topCities[0].value) * 100 : 0;
-                                return (
-                                    <div key={city.name} className="space-y-2">
-                                        <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest text-slate-600 px-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-blue-500">#{index + 1}</span>
-                                                {city.name}
-                                            </div>
-                                            <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(city.value)}</span>
-                                        </div>
-                                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-blue-600 rounded-full transition-all duration-1000"
-                                                style={{ width: `${percentage}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
 
-                    <div className="pt-6 border-t border-slate-100">
-                        <div className="flex items-center gap-2 p-4 bg-slate-50 rounded-2xl">
-                            <Building2 className="w-5 h-5 text-slate-400" />
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                <span className="font-bold text-slate-800">Dica:</span> Seus contratos vitoriosos estão concentrados em <span className="font-bold text-blue-600">{topCities[0]?.name || "várias cidades"}</span>.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* VOLUME MENSAL (GRÁFICO CSS DINÂMICO) */}
-            <div className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                        <BarChart3 className="w-6 h-6 text-slate-800" />
-                        <h3 className="font-black text-slate-800 uppercase tracking-tight">Volume de Licitações (Últimos 6 Meses)</h3>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase">Ganhos</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-slate-200 rounded-full"></div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase">Participações</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-end justify-between gap-2 h-48 px-2">
-                    {monthlyStats.map((item) => (
-                        <div key={item.month} className="flex-1 flex flex-col items-center gap-3 group">
-                            <div className="w-full max-w-[40px] flex flex-col justify-end gap-1 h-32 relative">
-                                {/* Barra Total */}
-                                <div
-                                    className="w-full bg-slate-100 rounded-t-lg transition-all duration-500 group-hover:bg-slate-200"
-                                    style={{ height: `${(item.total / maxVolume) * 100}%` }}
-                                ></div>
-                                {/* Barra Ganha */}
-                                <div
-                                    className="w-full bg-blue-600 rounded-t-lg absolute bottom-0 left-0 transition-all duration-700"
-                                    style={{ height: `${(item.won / maxVolume) * 100}%` }}
-                                >
-                                    <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-1 px-2 rounded-lg font-black whitespace-nowrap transition-opacity">
-                                        {item.won} Vitórias
-                                    </div>
+                            <div className="pt-6 border-t border-slate-50 flex items-end justify-between">
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Gerenciado</p>
+                                    <p className="text-xl font-black text-slate-900">{formatCurrency(company.value)}</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white">
+                                    <ArrowLeft className="w-5 h-5 rotate-180" />
                                 </div>
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.month}</span>
-                        </div>
+                        </button>
                     ))}
+
+                    <button className="border-2 border-dashed border-slate-200 rounded-[40px] p-8 flex flex-col items-center justify-center gap-4 text-slate-400 hover:bg-slate-50 transition-all">
+                        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+                            <Share2 className="w-6 h-6" />
+                        </div>
+                        <span className="font-bold uppercase text-[10px] tracking-widest">Adicionar Novo Perfil</span>
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // VIEW: RELATÓRIO DO CLIENTE
+    return (
+        <div className="min-h-screen bg-white p-4 md:p-10 max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-500 overflow-hidden">
+            {/* Cabeçalho de Navegação (Apenas Interno) */}
+            <div className="flex items-center justify-between no-print mb-8">
+                <button
+                    onClick={() => setSelectedCompany(null)}
+                    className="flex items-center gap-2 text-slate-400 hover:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" /> Voltar aos Clientes
+                </button>
+                <div className="flex gap-3">
+                    <button className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
+                        Imprimir / PDF
+                    </button>
+                    <button className="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
+                        <Share2 className="w-4 h-4" /> Enviar para WhatsApp
+                    </button>
+                </div>
+            </div>
+
+            {/* RELATÓRIO ESTILO DOCUMENTO */}
+            <div className="space-y-16">
+                {/* 1. HEADER DO RELATÓRIO */}
+                <div className="flex flex-col md:flex-row justify-between items-start gap-8 border-b-4 border-slate-900 pb-10">
+                    <div className="space-y-2">
+                        <span className="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-tighter">Relatório Mensal de Performance</span>
+                        <h1 className="text-5xl font-black text-slate-900 italic uppercase leading-none">{selectedCompany}</h1>
+                        <p className="text-slate-400 font-bold uppercase text-xs tracking-[0.3em]">Gestão Estratégica Grupo Santi • {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+                        <Trophy className="w-10 h-10 text-amber-500 mb-2" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Geral em Atas</p>
+                        <p className="text-3xl font-black text-slate-900 tracking-tighter">{formatCurrency(reportData!.totalWon)}</p>
+                    </div>
+                </div>
+
+                {/* 2. GRANDES NÚMEROS DE IMPACTO */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Novos Negócios (Patrimônio)</h3>
+                        </div>
+                        <div className="p-8 bg-amber-50 rounded-[40px] border-2 border-amber-100">
+                            <p className="text-lg font-bold text-amber-800 mb-1 opacity-70">Novas Atas Geradas</p>
+                            <h2 className="text-5xl font-black text-amber-600 tracking-tighter">{formatCurrency(reportData!.newAtasVal)}</h2>
+                            <p className="text-[11px] font-black text-amber-700/50 mt-4 uppercase tracking-widest border-t border-amber-200 pt-4">Valor bruto adicionado à carteira do cliente</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-5 h-5 text-blue-600" />
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Receita Preservada (Manutenção)</h3>
+                        </div>
+                        <div className="p-8 bg-blue-50 rounded-[40px] border-2 border-blue-100">
+                            <p className="text-lg font-bold text-blue-800 mb-1 opacity-70">Aditivos e Prorrogações</p>
+                            <h2 className="text-5xl font-black text-blue-600 tracking-tighter">{formatCurrency(reportData!.extAtasVal)}</h2>
+                            <p className="text-[11px] font-black text-blue-700/50 mt-4 uppercase tracking-widest border-t border-blue-200 pt-4">Valor histórico garantido via gestão de prazos</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 3. VÍTORIA GEOGRÁFICA & PRÓXIMOS PASSOS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-3 border-b-2 border-slate-100 pb-3">
+                            <MapPin className="w-5 h-5 text-slate-400" />
+                            <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Principais Mercados (Presença)</h3>
+                        </div>
+                        <div className="space-y-6">
+                            {reportData!.topCities.map((city, idx) => (
+                                <div key={city.name} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-slate-300 font-black text-xl">0{idx + 1}</span>
+                                        <span className="font-bold text-slate-700 uppercase">{city.name}</span>
+                                    </div>
+                                    <span className="font-black text-slate-900 text-sm">{formatCurrency(city.val)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-3 border-b-2 border-slate-100 pb-3">
+                            <Calendar className="w-5 h-5 text-slate-400" />
+                            <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Agenda de Renovação Imediata</h3>
+                        </div>
+                        <div className="space-y-4">
+                            {reportData!.expAtas.map(ata => (
+                                <div key={ata.id} className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] font-black text-slate-400 leading-none">ATA {ata.ataNumber}</span>
+                                        <span className="font-bold text-slate-700 truncate w-40">Finalizar Renovação</span>
+                                    </div>
+                                    <span className="text-red-600 font-black text-xs">{formatDate(ata.endDate!)}</span>
+                                </div>
+                            ))}
+                            <div className="p-5 bg-slate-900 rounded-3xl text-center">
+                                <p className="text-white font-black text-[10px] uppercase tracking-widest">Nenhuma ação de risco detectada</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. FOOTER DO RELATÓRIO */}
+                <div className="pt-20 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-xl italic">GS</div>
+                        <div>
+                            <p className="font-black text-slate-900 text-sm uppercase">Grupo Santi Licitações</p>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Excelência em Gestão Governamental</p>
+                        </div>
+                    </div>
+                    <div className="text-center md:text-right">
+                        <p className="text-[10px] font-black text-slate-300 uppercase leading-loose">Documento validado via sistema LicitaGestor V3<br />Gerado em {new Date().toLocaleDateString()} às {new Date().toLocaleTimeString()}</p>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
+
