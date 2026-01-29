@@ -3,13 +3,13 @@
 import { useTenders } from "@/context/TenderContext";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Save, DollarSign, Clock } from "lucide-react";
+import { ArrowLeft, Save, DollarSign, Clock, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { maskCurrency, parseCurrencyToNumber } from "@/lib/utils";
 import { TenderStatus } from "@/types";
 
 export default function EditTenderPage() {
-    const { tenders, updateTender, isLoading } = useTenders();
+    const { tenders, updateTender, deleteTender, isLoading } = useTenders();
     const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
@@ -290,7 +290,21 @@ export default function EditTenderPage() {
                         />
                     </div>
 
-                    <div className="pt-8 border-t border-slate-100 flex justify-end">
+                    <div className="pt-8 border-t border-slate-100 flex justify-end gap-4">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (confirm("Tem certeza que deseja EXCLUIR esta licitação? A ação não pode ser desfeita.")) {
+                                    deleteTender(id);
+                                    router.push("/tenders");
+                                }
+                            }}
+                            className="bg-red-50 hover:bg-red-100 text-red-600 px-6 py-4 rounded-2xl font-black transition-all uppercase tracking-widest text-sm"
+                        >
+                            <Trash2 className="w-5 h-5 mr-2 inline" />
+                            Excluir
+                        </button>
+
                         <button
                             type="submit"
                             className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-black transition-all transform hover:scale-[1.02] shadow-2xl shadow-blue-500/40 uppercase tracking-widest text-sm"
