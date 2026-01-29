@@ -5,7 +5,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Save, DollarSign, Clock } from "lucide-react";
 import Link from "next/link";
-import { formatCurrency, maskCurrency, parseCurrencyToNumber } from "@/lib/utils";
+import { maskCurrency, parseCurrencyToNumber } from "@/lib/utils";
 import { TenderStatus } from "@/types";
 
 export default function EditTenderPage() {
