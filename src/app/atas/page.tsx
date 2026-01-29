@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, FileText, Search, AlertCircle, Clock, AlertTriangle, X, ChevronDown } from "lucide-react";
+import { Plus, FileText, Search, AlertCircle, Clock, AlertTriangle, X, ChevronDown, Star, RefreshCw } from "lucide-react";
 import { useTenders } from "@/context/TenderContext";
 import { formatCurrency } from "@/lib/utils";
 import { useState, useMemo } from "react";
@@ -23,7 +23,7 @@ function getStatus(daysUntil: number): 'ATIVA' | 'VENCE EM BREVE' | 'VENCIDA' {
     return 'ATIVA';
 }
 
-type FilterType = "all" | "expired" | "expiring_soon" | "active" | "extendable" | "adhesion";
+type FilterType = "all" | "expired" | "expiring_soon" | "active" | "extendable" | "adhesion" | "new" | "extended";
 
 export default function AtasPage() {
     const { atas, tenders, isLoading } = useTenders();
@@ -101,6 +101,8 @@ export default function AtasPage() {
                 case "active": return a.daysUntil > 30;
                 case "extendable": return a.canExtend;
                 case "adhesion": return a.canAdhere;
+                case "new": return a.isNew;
+                case "extended": return a.isExtended;
                 default: return true;
             }
         });
@@ -137,7 +139,7 @@ export default function AtasPage() {
     ];
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8">
+        <div className="p-6 max-w-7xl mx-auto space-y-8 text-slate-900">
             {openMenu && <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />}
 
             {/* HEADER */}
@@ -154,78 +156,91 @@ export default function AtasPage() {
                 </Link>
             </div>
 
-            {/* SUMÁRIOS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            {/* SUMÁRIOS - AGORA SÃO FILTROS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <button
+                    onClick={() => setActiveFilter(activeFilter === 'new' ? 'all' : 'new')}
+                    className={`p-6 rounded-[2rem] border-2 transition-all flex items-center justify-between text-left group ${activeFilter === 'new' ? 'bg-amber-500 border-amber-600 shadow-xl shadow-amber-500/20' : 'bg-white border-slate-200 hover:border-amber-400 hover:shadow-md'}`}
+                >
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Atas Novas</p>
+                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${activeFilter === 'new' ? 'text-amber-100' : 'text-slate-400'}`}>Faturamento Novo</p>
                         <div className="flex items-baseline gap-2">
-                            <h4 className="text-2xl font-black text-slate-800">{counts.newAtas}</h4>
-                            <span className="text-sm font-bold text-slate-500">{formatCurrency(counts.newAtasValue)}</span>
+                            <h4 className={`text-4xl font-black ${activeFilter === 'new' ? 'text-white' : 'text-slate-800'}`}>{counts.newAtas}</h4>
+                            <span className={`text-sm font-bold ${activeFilter === 'new' ? 'text-amber-100' : 'text-slate-500'}`}>{formatCurrency(counts.newAtasValue)}</span>
                         </div>
+                        <p className={`text-[9px] font-bold mt-2 ${activeFilter === 'new' ? 'text-amber-100' : 'text-amber-600'}`}>Clique para filtrar estas atas</p>
                     </div>
-                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center"><FileText className="w-6 h-6 text-blue-600" /></div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-transform group-hover:rotate-12 ${activeFilter === 'new' ? 'bg-white/20' : 'bg-amber-50'}`}>
+                        <Star className={`w-8 h-8 ${activeFilter === 'new' ? 'text-white fill-white' : 'text-amber-600'}`} />
+                    </div>
+                </button>
+
+                <button
+                    onClick={() => setActiveFilter(activeFilter === 'extended' ? 'all' : 'extended')}
+                    className={`p-6 rounded-[2rem] border-2 transition-all flex items-center justify-between text-left group ${activeFilter === 'extended' ? 'bg-blue-600 border-blue-700 shadow-xl shadow-blue-600/20' : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md'}`}
+                >
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Atas Aditivadas</p>
+                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${activeFilter === 'extended' ? 'text-blue-100' : 'text-slate-400'}`}>Faturamento Mantido</p>
                         <div className="flex items-baseline gap-2">
-                            <h4 className="text-2xl font-black text-slate-800">{counts.extendedAtas}</h4>
-                            <span className="text-sm font-bold text-slate-500">{formatCurrency(counts.extendedAtasValue)}</span>
+                            <h4 className={`text-4xl font-black ${activeFilter === 'extended' ? 'text-white' : 'text-slate-800'}`}>{counts.extendedAtas}</h4>
+                            <span className={`text-sm font-bold ${activeFilter === 'extended' ? 'text-blue-100' : 'text-slate-500'}`}>{formatCurrency(counts.extendedAtasValue)}</span>
                         </div>
+                        <p className={`text-[9px] font-bold mt-2 ${activeFilter === 'extended' ? 'text-blue-100' : 'text-blue-600'}`}>Clique para filtrar estas atas</p>
                     </div>
-                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center"><AlertCircle className="w-6 h-6 text-amber-600" /></div>
-                </div>
+                    <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-transform group-hover:rotate-12 ${activeFilter === 'extended' ? 'bg-white/20' : 'bg-blue-50'}`}>
+                        <RefreshCw className={`w-8 h-8 ${activeFilter === 'extended' ? 'text-white' : 'text-blue-600'}`} />
+                    </div>
+                </button>
             </div>
 
             {/* ALERTAS */}
             {(counts.expired > 0 || counts.expiringSoon > 0) && (
                 <div className="flex flex-wrap gap-4">
-                    {counts.expired > 0 && <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-2xl"><AlertTriangle className="w-5 h-5" /><span className="font-bold text-sm">{counts.expired} ata{counts.expired > 1 ? 's' : ''} vencida{counts.expired > 1 ? 's' : ''}!</span></div>}
-                    {counts.expiringSoon > 0 && <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-2xl"><Clock className="w-5 h-5" /><span className="font-bold text-sm">{counts.expiringSoon} ata{counts.expiringSoon > 1 ? 's' : ''} vencendo nos próximos 30 dias</span></div>}
+                    {counts.expired > 0 && <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-2xl shadow-sm shadow-red-100"><AlertTriangle className="w-5 h-5" /><span className="font-bold text-sm tracking-tight">{counts.expired} faturamentos vencidos!</span></div>}
+                    {counts.expiringSoon > 0 && <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-2xl shadow-sm shadow-amber-100"><Clock className="w-5 h-5" /><span className="font-bold text-sm tracking-tight">{counts.expiringSoon} vencendo nos próximos 30 dias</span></div>}
                 </div>
             )}
 
             {/* BUSCA E FILTROS */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4">
+            <div className="bg-white p-6 rounded-[2.5rem] border border-slate-200 space-y-4 shadow-sm">
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input type="text" placeholder="Buscar por título, órgão, cidade ou número..." className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium text-slate-600 focus:ring-2 focus:ring-amber-500" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <input type="text" placeholder="Buscar por título, órgão, cidade ou número..." className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium text-slate-600 focus:ring-2 focus:ring-amber-500 transition-all" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
 
                     {/* Filtros Dropdown */}
                     <div className="flex gap-2">
                         {/* Cidade */}
                         <div className="relative">
-                            <button onClick={() => setOpenMenu(openMenu === 'city' ? null : 'city')} className={`px-4 py-3 rounded-xl border text-xs font-bold uppercase flex items-center gap-2 transition-all ${filterCity.length > 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                            <button onClick={() => setOpenMenu(openMenu === 'city' ? null : 'city')} className={`h-14 px-6 rounded-2xl border text-xs font-bold uppercase flex items-center gap-2 transition-all ${filterCity.length > 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'}`}>
                                 Cidade {filterCity.length > 0 && `(${filterCity.length})`} <ChevronDown className="w-4 h-4" />
                             </button>
                             {openMenu === 'city' && (
-                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 min-w-[200px] p-2 max-h-60 overflow-y-auto">
+                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-20 min-w-[220px] p-3 max-h-60 overflow-y-auto">
                                     {uniqueCities.map(city => (
-                                        <label key={city} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer text-sm">
-                                            <input type="checkbox" checked={filterCity.includes(city)} onChange={() => toggleFilter('city', city)} className="accent-amber-500 w-4 h-4" /> {city}
+                                        <label key={city} className="flex items-center gap-2 p-2.5 hover:bg-slate-50 rounded-xl cursor-pointer text-sm font-medium">
+                                            <input type="checkbox" checked={filterCity.includes(city)} onChange={() => toggleFilter('city', city)} className="accent-amber-500 w-4 h-4 rounded" /> {city}
                                         </label>
                                     ))}
-                                    {filterCity.length > 0 && <button onClick={() => setFilterCity([])} className="w-full text-center text-xs text-red-500 font-bold mt-2 pt-2 border-t">Limpar</button>}
+                                    {filterCity.length > 0 && <button onClick={() => setFilterCity([])} className="w-full text-center text-xs text-red-500 font-bold mt-2 pt-2 border-t border-slate-100 hover:text-red-600">Limpar Filtros</button>}
                                 </div>
                             )}
                         </div>
 
                         {/* Empresa */}
                         <div className="relative">
-                            <button onClick={() => setOpenMenu(openMenu === 'company' ? null : 'company')} className={`px-4 py-3 rounded-xl border text-xs font-bold uppercase flex items-center gap-2 transition-all ${filterCompany.length > 0 ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                            <button onClick={() => setOpenMenu(openMenu === 'company' ? null : 'company')} className={`h-14 px-6 rounded-2xl border text-xs font-bold uppercase flex items-center gap-2 transition-all ${filterCompany.length > 0 ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'}`}>
                                 Empresa {filterCompany.length > 0 && `(${filterCompany.length})`} <ChevronDown className="w-4 h-4" />
                             </button>
                             {openMenu === 'company' && (
-                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 min-w-[200px] p-2 max-h-60 overflow-y-auto">
+                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-20 min-w-[220px] p-3 max-h-60 overflow-y-auto">
                                     {uniqueCompanies.map(comp => (
-                                        <label key={comp} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer text-sm">
-                                            <input type="checkbox" checked={filterCompany.includes(comp)} onChange={() => toggleFilter('company', comp)} className="accent-amber-500 w-4 h-4" /> {comp}
+                                        <label key={comp} className="flex items-center gap-2 p-2.5 hover:bg-slate-50 rounded-xl cursor-pointer text-sm font-medium">
+                                            <input type="checkbox" checked={filterCompany.includes(comp)} onChange={() => toggleFilter('company', comp)} className="accent-amber-500 w-4 h-4 rounded" /> {comp}
                                         </label>
                                     ))}
-                                    {filterCompany.length > 0 && <button onClick={() => setFilterCompany([])} className="w-full text-center text-xs text-red-500 font-bold mt-2 pt-2 border-t">Limpar</button>}
+                                    {filterCompany.length > 0 && <button onClick={() => setFilterCompany([])} className="w-full text-center text-xs text-red-500 font-bold mt-2 pt-2 border-t border-slate-100 hover:text-red-600">Limpar Filtros</button>}
                                 </div>
                             )}
                         </div>
@@ -235,44 +250,57 @@ export default function AtasPage() {
                 {/* Status Pills */}
                 <div className="flex flex-wrap gap-2">
                     {filterButtons.map(btn => (
-                        <button key={btn.key} onClick={() => setActiveFilter(btn.key)} className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${activeFilter === btn.key ? `${btn.color} ring-2 ring-offset-1 ring-slate-400` : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
-                            {btn.label}{btn.count !== undefined && <span className="ml-1.5 opacity-70">({btn.count})</span>}
+                        <button key={btn.key} onClick={() => setActiveFilter(btn.key)} className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === btn.key ? `${btn.color} ring-4 ring-slate-100` : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                            {btn.label}{btn.count !== undefined && <span className="ml-1.5 opacity-60">({btn.count})</span>}
                         </button>
                     ))}
+                    {activeFilter !== 'all' && (
+                        <button onClick={() => setActiveFilter('all')} className="px-5 py-2.5 rounded-full text-[10px] font-black bg-red-50 text-red-600 uppercase tracking-widest hover:bg-red-100 transition-all flex items-center gap-1.5">
+                            <X className="w-3 h-3" /> Limpar Filtro
+                        </button>
+                    )}
                 </div>
 
                 {/* Indicadores de Filtros Ativos */}
                 {(filterCity.length > 0 || filterCompany.length > 0) && (
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-                        <span className="text-xs text-slate-400 font-bold">Filtros:</span>
-                        {filterCity.map(c => <span key={c} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold flex items-center gap-1">{c} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleFilter('city', c)} /></span>)}
-                        {filterCompany.map(c => <span key={c} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold flex items-center gap-1">{c} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleFilter('company', c)} /></span>)}
+                    <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
+                        {filterCity.map(c => <span key={c} className="text-[10px] bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg font-black flex items-center gap-1.5">{c} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleFilter('city', c)} /></span>)}
+                        {filterCompany.map(c => <span key={c} className="text-[10px] bg-purple-100 text-purple-800 px-3 py-1.5 rounded-lg font-black flex items-center gap-1.5">{c} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleFilter('company', c)} /></span>)}
                     </div>
                 )}
             </div>
 
             {/* ORDENAÇÃO */}
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500 font-medium">{filteredAtas.length} ata{filteredAtas.length !== 1 ? 's' : ''} encontrada{filteredAtas.length !== 1 ? 's' : ''}</p>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 font-bold">Ordenar:</span>
-                    {[
-                        { key: 'vencimento', label: 'Vencimento' },
-                        { key: 'valor', label: 'Valor' },
-                        { key: 'cidade', label: 'Cidade' },
-                    ].map(opt => (
-                        <button key={opt.key} onClick={() => setSortBy(opt.key as any)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${sortBy === opt.key ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                            {opt.label}
-                        </button>
-                    ))}
+            <div className="flex items-center justify-between px-2">
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">
+                    Mostrando <span className="text-slate-900">{filteredAtas.length}</span> resultados de <span className="text-slate-900">{atas.length}</span>
+                </p>
+                <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Ordenar por:</span>
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                        {[
+                            { key: 'vencimento', label: 'Prazo' },
+                            { key: 'valor', label: 'Maior Valor' },
+                            { key: 'cidade', label: 'Cidade' },
+                        ].map(opt => (
+                            <button key={opt.key} onClick={() => setSortBy(opt.key as any)} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${sortBy === opt.key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* LISTA DE CARDS */}
-            <div className="space-y-4">
+            <div className="space-y-4 pb-20">
                 {filteredAtas.length === 0 ? (
-                    <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center">
-                        <p className="text-slate-400 text-sm">Nenhuma ata encontrada com os filtros atuais.</p>
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-20 text-center shadow-sm">
+                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Search className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <h3 className="text-lg font-black text-slate-800">Nada encontrado aqui</h3>
+                        <p className="text-slate-400 text-sm mt-1">Tente remover os filtros ou buscar por outro termo.</p>
+                        <button onClick={() => { setActiveFilter('all'); setFilterCity([]); setFilterCompany([]); setSearchTerm(""); }} className="mt-6 text-sm font-black text-amber-600 hover:underline">Limpar todos os filtros</button>
                     </div>
                 ) : (
                     filteredAtas.map(ata => (
