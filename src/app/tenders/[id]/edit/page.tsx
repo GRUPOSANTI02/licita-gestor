@@ -129,9 +129,6 @@ export default function EditTenderPage() {
                                     </button>
                                 ))}
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-2 font-mono">
-                                Debug: Status Selecionado: <span className="font-bold text-slate-600">{form.status || 'Nenhum'}</span>
-                            </p>
                         </div>
 
                         {/* Won Value */}
