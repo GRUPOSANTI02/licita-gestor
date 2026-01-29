@@ -42,7 +42,12 @@ export function CalendarWidget() {
                 </div>
                 <div className="flex gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-100">
                     <button
-                        onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}
+                        onClick={() => {
+                            const d = new Date(currentDate);
+                            d.setDate(1); // Evita pular de Jan 31 -> Março
+                            d.setMonth(d.getMonth() - 1);
+                            setCurrentDate(d);
+                        }}
                         className="p-3 hover:bg-white hover:shadow-md rounded-xl text-slate-600 transition-all active:scale-95"
                     >
                         <ChevronLeft className="w-6 h-6" />
@@ -54,7 +59,12 @@ export function CalendarWidget() {
                         Hoje
                     </button>
                     <button
-                        onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}
+                        onClick={() => {
+                            const d = new Date(currentDate);
+                            d.setDate(1); // Evita pular mes em dias 31
+                            d.setMonth(d.getMonth() + 1);
+                            setCurrentDate(d);
+                        }}
                         className="p-3 hover:bg-white hover:shadow-md rounded-xl text-slate-600 transition-all active:scale-95"
                     >
                         <ChevronRight className="w-6 h-6" />

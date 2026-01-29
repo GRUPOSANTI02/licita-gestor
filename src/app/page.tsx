@@ -25,20 +25,31 @@ export default function Dashboard() {
             .sort((a: any, b: any) => new Date(a.nextSessionDate!).getTime() - new Date(b.nextSessionDate!).getTime());
     }, [tenders]);
 
+    // Helper para verificar status excluídos
+    const isExcluded = (status: string) => {
+        const s = String(status || '').toLowerCase().trim();
+        return s === 'not_participated' ||
+            s === 'não participou' ||
+            s === 'nao participou';
+    };
+
     const totalValue = tenders
-        .filter((t: any) => t.status !== 'not_participated' && t.status !== 'Não Participou')
+        .filter((t: any) => !isExcluded(t.status))
         .reduce((acc: number, t: any) => acc + (t.value || 0), 0);
 
-    const activeTendersList = tenders.filter((t: any) =>
-        t.status === 'in_progress' ||
-        t.status === 'pending' ||
-        t.status === 'Em Análise' ||
-        t.status === 'Aguardando'
-    );
-    const wonTenders = tenders.filter((t: any) => t.status === 'won' || t.status === 'Ganha');
+    const activeTendersList = tenders.filter((t: any) => {
+        const s = String(t.status || '').toLowerCase().trim();
+        return ['in_progress', 'pending', 'em análise', 'aguardando', 'running', 'em andamento'].includes(s);
+    });
+
+    const wonTenders = tenders.filter((t: any) => {
+        const s = String(t.status || '').toLowerCase().trim();
+        return s === 'won' || s === 'ganha';
+    });
+
     const totalWonRevenue = wonTenders.reduce((acc: number, t: any) => acc + (t.wonValue || t.value || 0), 0);
 
-    const participatedTendersCount = tenders.filter((t: any) => t.status !== 'not_participated' && t.status !== 'Não Participou').length;
+    const participatedTendersCount = tenders.filter((t: any) => !isExcluded(t.status)).length;
 
     const urgentTenders = [...activeTendersList]
         .sort((a: any, b: any) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
