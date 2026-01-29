@@ -31,30 +31,35 @@ export default function NewTenderPage() {
         responsibleId: "1",
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const newTender = {
-            id: Math.random().toString(36).substr(2, 9),
-            tenderNumber: form.tenderNumber,
-            title: form.title,
-            agency: form.agency,
-            city: form.city,
-            value: parseCurrencyToNumber(form.value) || 0,
-            wonValue: form.status === 'won' ? (parseCurrencyToNumber(form.wonValue) || 0) : undefined,
-            status: form.status,
-            deadline: form.deadline,
-            description: form.description,
-            editalUrl: form.editalUrl,
-            nextSessionDate: form.nextSessionDate,
-            responsibleId: "1",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
+        try {
+            const newTender = {
+                // ID será gerado no Context para garantir consistência
+                tenderNumber: form.tenderNumber,
+                title: form.title,
+                agency: form.agency,
+                city: form.city,
+                value: parseCurrencyToNumber(form.value) || 0,
+                wonValue: form.status === 'won' ? (parseCurrencyToNumber(form.wonValue) || 0) : undefined,
+                status: form.status,
+                deadline: form.deadline, // Passa string do input (YYYY-MM-DDTHH:mm), context trata
+                description: form.description,
+                editalUrl: form.editalUrl,
+                nextSessionDate: form.nextSessionDate,
+                responsibleId: "1",
+            };
 
-        addTender(newTender);
-        setSavedTender(newTender);
-        setIsSuccess(true);
+            await addTender(newTender);
+            // setSavedTender é apenas para o modo visual de sucesso
+            setSavedTender({ ...newTender, id: 'temp' });
+            setIsSuccess(true);
+
+        } catch (error: any) {
+            console.error("Erro ao criar licitação:", error);
+            alert(`Erro ao salvar: ${error.message || "Verifique os dados e tente novamente."}`);
+        }
     };
 
     if (isSuccess && savedTender) {

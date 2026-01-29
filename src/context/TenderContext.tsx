@@ -158,20 +158,32 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
     }, [atas, isLoading]);
 
     const addTender = async (data: any) => {
+        // Garantir que as datas estejam em ISO String se existirem
+        const deadlineISO = data.deadline ? new Date(data.deadline).toISOString() : null;
+        const nextSessionDateISO = data.nextSessionDate ? new Date(data.nextSessionDate).toISOString() : null;
+
         const newTender: Tender = {
             ...data,
             id: crypto.randomUUID(),
+            deadline: deadlineISO || data.deadline, // Fallback se falhar
+            nextSessionDate: nextSessionDateISO || data.nextSessionDate,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
+
+        // 1. Atualizar estado local imediatamente
         setTenders(prev => {
             const updated = [newTender, ...prev];
             localStorage.setItem("licita_gestor_data", JSON.stringify(updated));
             return updated;
         });
 
+        // 2. Persistir no Supabase se configurado
         if (isSupabaseConfigured) {
-            await supabase.from('tenders').insert([{
+            console.log("Criando na nuvem (Supabase)...");
+
+            const supabaseData = {
+                id: newTender.id, // Força o mesmo ID gerado localmente
                 tender_number: data.tenderNumber,
                 title: data.title,
                 agency: data.agency,
@@ -179,12 +191,20 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                 value: data.value,
                 won_value: data.wonValue,
                 status: data.status,
-                deadline: data.deadline,
+                deadline: deadlineISO,
                 description: data.description,
                 edital_url: data.editalUrl,
-                next_session_date: data.nextSessionDate,
+                next_session_date: nextSessionDateISO,
                 responsible_id: data.responsibleId || "1",
-            }]);
+                updated_at: newTender.updatedAt // Sincroniza timestamp para o merge funcionar
+            };
+
+            const { error } = await supabase.from('tenders').insert([supabaseData]);
+
+            if (error) {
+                console.error("Erro CRÍTICO ao criar no Supabase:", error);
+                throw new Error(`Erro ao salvar na nuvem: ${error.message}`);
+            }
         }
     };
 

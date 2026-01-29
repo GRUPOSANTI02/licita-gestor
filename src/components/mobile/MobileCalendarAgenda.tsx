@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTenders } from "@/context/TenderContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Search, Plus, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Plus, MapPin, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -13,7 +13,7 @@ const monthNames = [
 ];
 
 export function MobileCalendarAgenda() {
-    const { tenders } = useTenders();
+    const { tenders, deleteTender } = useTenders();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -146,7 +146,7 @@ export function MobileCalendarAgenda() {
                                         : 'hover:border-blue-500';
 
                             return (
-                                <Link href={`/tenders/${tender.id}/edit?returnTo=/`} key={tender.id} className="block group">
+                                <Link href={`/tenders/${tender.id}/edit?returnTo=/`} key={tender.id} className="block group relative">
                                     <div className={`bg-slate-900 rounded-2xl overflow-hidden flex border border-slate-800 ${borderColor} transition-colors`}>
                                         {/* Barra lateral colorida */}
                                         <div className={`w-2 ${statusColor}`}></div>
@@ -154,12 +154,26 @@ export function MobileCalendarAgenda() {
                                         <div className="p-4 flex-1">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-xs font-mono font-bold text-slate-400">{time}</span>
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
-                                                    Valor: {formatCurrency(tender.value)}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
+                                                        Valor: {formatCurrency(tender.value)}
+                                                    </span>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            if (confirm("Tem certeza que deseja excluir esta licitação?")) {
+                                                                deleteTender(tender.id);
+                                                            }
+                                                        }}
+                                                        className="p-1.5 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors z-20"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </div>
 
-                                            <h4 className="font-black text-white text-sm uppercase leading-tight mb-2">
+                                            <h4 className="font-black text-white text-sm uppercase leading-tight mb-2 pr-6">
                                                 {tender.title}
                                             </h4>
 
