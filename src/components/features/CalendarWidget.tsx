@@ -100,7 +100,7 @@ export function CalendarWidget() {
                             </span>
 
                             <div className="flex-1 flex flex-col gap-1.5 w-full overflow-y-auto custom-scrollbar-agenda pr-0.5 mt-1">
-                                {dayTenders.map((t, idx) => (
+                                {dayTenders.map((t: any, idx: number) => (
                                     <Link
                                         key={idx}
                                         href={`/tenders/${t.id}/edit?returnTo=/`}

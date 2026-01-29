@@ -22,26 +22,26 @@ export default function Dashboard() {
         today.setHours(0, 0, 0, 0);
         return tenders
             .filter(t => t.nextSessionDate && new Date(t.nextSessionDate) >= today)
-            .sort((a, b) => new Date(a.nextSessionDate!).getTime() - new Date(b.nextSessionDate!).getTime());
+            .sort((a: any, b: any) => new Date(a.nextSessionDate!).getTime() - new Date(b.nextSessionDate!).getTime());
     }, [tenders]);
 
     const totalValue = tenders
-        .filter(t => t.status !== 'not_participated' && t.status !== 'Não Participou')
-        .reduce((acc, t) => acc + (t.value || 0), 0);
+        .filter((t: any) => t.status !== 'not_participated' && t.status !== 'Não Participou')
+        .reduce((acc: number, t: any) => acc + (t.value || 0), 0);
 
-    const activeTendersList = tenders.filter(t =>
+    const activeTendersList = tenders.filter((t: any) =>
         t.status === 'in_progress' ||
         t.status === 'pending' ||
         t.status === 'Em Análise' ||
         t.status === 'Aguardando'
     );
-    const wonTenders = tenders.filter(t => t.status === 'won' || t.status === 'Ganha');
-    const totalWonRevenue = wonTenders.reduce((acc, t) => acc + (t.wonValue || t.value || 0), 0);
+    const wonTenders = tenders.filter((t: any) => t.status === 'won' || t.status === 'Ganha');
+    const totalWonRevenue = wonTenders.reduce((acc: number, t: any) => acc + (t.wonValue || t.value || 0), 0);
 
-    const participatedTendersCount = tenders.filter(t => t.status !== 'not_participated' && t.status !== 'Não Participou').length;
+    const participatedTendersCount = tenders.filter((t: any) => t.status !== 'not_participated' && t.status !== 'Não Participou').length;
 
     const urgentTenders = [...activeTendersList]
-        .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+        .sort((a: any, b: any) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
         .slice(0, 4);
 
     const statCards = [
