@@ -85,11 +85,11 @@ export default function AtasPage() {
         if (searchTerm) {
             const s = searchTerm.toLowerCase();
             result = result.filter(a =>
-                a.resolvedTitle.toLowerCase().includes(s) ||
-                a.resolvedAgency.toLowerCase().includes(s) ||
-                a.resolvedCity.toLowerCase().includes(s) ||
+                (a.resolvedTitle || "").toLowerCase().includes(s) ||
+                (a.resolvedAgency || "").toLowerCase().includes(s) ||
+                (a.resolvedCity || "").toLowerCase().includes(s) ||
                 (a.company && a.company.toLowerCase().includes(s)) ||
-                a.ataNumber.toLowerCase().includes(s)
+                (a.ataNumber && a.ataNumber.toLowerCase().includes(s))
             );
         }
 
