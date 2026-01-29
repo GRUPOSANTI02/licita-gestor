@@ -43,10 +43,19 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             try {
                 let parsedTenders = JSON.parse(storedTenders);
 
-                // AUTO-CORREÇÂO DE DADOS ANTIGOS (FIX AMAMBAI)
+                // AUTO-CORREÇÂO DE DADOS ANTIGOS (FIX AMAMBAI E STATUS)
                 parsedTenders = parsedTenders.map((t: any) => {
                     if (t.city === "Amabai") t.city = "Amambai"; // Corrige erro de digitação
                     if (t.title && t.title.includes("Amabai")) t.title = t.title.replace("Amabai", "Amambai");
+
+                    // Normalizar Status Legado
+                    if (t.status === 'Não Participou') t.status = 'not_participated';
+                    if (t.status === 'Em Andamento') t.status = 'running';
+                    if (t.status === 'Ganha') t.status = 'won';
+                    if (t.status === 'Perdida') t.status = 'lost';
+                    if (t.status === 'Em Análise') t.status = 'in_progress';
+                    if (t.status === 'Aguardando') t.status = 'pending';
+
                     return t;
                 });
 
@@ -108,7 +117,7 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
         // Não estamos assinando mudanças em tempo real para Atas ainda
     }, []);
 
-    // Persistência Automática Tenders
+    // Persistência Automática Tenders (Mantido como backup)
     useEffect(() => {
         if (!isLoading) localStorage.setItem("licita_gestor_data", JSON.stringify(tenders));
     }, [tenders, isLoading]);
@@ -125,7 +134,11 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
-        setTenders(prev => [newTender, ...prev]);
+        setTenders(prev => {
+            const updated = [newTender, ...prev];
+            localStorage.setItem("licita_gestor_data", JSON.stringify(updated));
+            return updated;
+        });
 
         if (isSupabaseConfigured) {
             await supabase.from('tenders').insert([{
@@ -146,8 +159,12 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
     };
 
     const updateTender = async (id: string, data: Partial<Tender>) => {
-        // Atualiza estado local imediatamente
-        setTenders(prev => prev.map(t => (t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t)));
+        // Atualiza estado local imediatamente e força persistência
+        setTenders(prev => {
+            const updated = prev.map(t => (t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t));
+            localStorage.setItem("licita_gestor_data", JSON.stringify(updated));
+            return updated;
+        });
 
         // Persiste no Supabase se configurado
         if (isSupabaseConfigured) {
