@@ -50,10 +50,17 @@ export default function EditTenderPage() {
             if (tender) {
                 // Correção de Fuso Horário: Usar o valor salvo sem conversão UTC excessiva
                 // Para inputs datetime-local, precisamos do formato YYYY-MM-DDTHH:mm
+                // Versão Simplificada: Apenas pega os primeiros 16 caracteres (YYYY-MM-DDTHH:mm)
+                // Se o banco salva em UTC, isso vai pegar o horário UTC. 
+                // Se isso causar erro de 4h, voltaremos para o offset. Mas vamos testar o "cru" primeiro.
                 const formatForInput = (dateStr: string | null | undefined) => {
                     if (!dateStr) return "";
+                    // Tenta criar Date e converter para ISO local hack
                     const d = new Date(dateStr);
-                    // Ajusta para o fuso local do usuário para exibir corretamente no input
+                    // O input datetime-local ESPERA o horário local do usuário.
+                    // Se dateStr é UTC (termina em Z), new Date() converte para local internamente.
+                    // Mas toISOString() converte de volta para UTC.
+                    // O correto: 
                     const offset = d.getTimezoneOffset() * 60000;
                     const localDate = new Date(d.getTime() - offset);
                     return localDate.toISOString().slice(0, 16);
@@ -74,29 +81,37 @@ export default function EditTenderPage() {
                     editalUrl: tender.editalUrl || "",
                     nextSessionDate: formatForInput(tender.nextSessionDate),
                 });
-
             } else {
                 router.push("/tenders");
             }
         }
     }, [id, tenders, isLoading, router]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        updateTender(id, {
+        // Debug visual para garantir que o status está certo ANTES de enviar
+        // console.log("Salvando status:", form.status); 
+
+        // Se for "not_participated", garante que vai assim
+        const finalStatus = form.status;
+
+        await updateTender(id, {
             tenderNumber: form.tenderNumber,
             title: form.title,
             agency: form.agency,
             city: form.city,
             value: parseCurrencyToNumber(form.value) || 0,
-            wonValue: form.status === 'won' ? (parseCurrencyToNumber(form.wonValue) || 0) : undefined,
-            status: form.status,
-            deadline: form.deadline,
+            wonValue: finalStatus === 'won' ? (parseCurrencyToNumber(form.wonValue) || 0) : undefined,
+            status: finalStatus,
+            deadline: form.deadline ? new Date(form.deadline).toISOString() : undefined, // Salva como ISO UTC
             description: form.description,
             editalUrl: form.editalUrl,
-            nextSessionDate: form.nextSessionDate,
+            nextSessionDate: form.nextSessionDate ? new Date(form.nextSessionDate).toISOString() : undefined, // Salva como ISO UTC
         });
+
+        // Alerta visual para o usuário
+        alert("Licitação salva com sucesso! (Status: " + (finalStatus === 'not_participated' ? 'Não Participou' : finalStatus) + ")");
 
         const returnTo = searchParams.get("returnTo");
         router.push(returnTo || "/tenders");
