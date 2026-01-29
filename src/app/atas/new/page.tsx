@@ -39,6 +39,7 @@ function NewAtaContent() {
         observations: "",
         company: "",
         isExtended: false,
+        isNew: false,
         value: 0
     });
 
@@ -354,12 +355,25 @@ function NewAtaContent() {
                             </div>
                         </label>
 
+                        <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.isNew ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <input
+                                type="checkbox"
+                                className="w-5 h-5 accent-amber-600"
+                                checked={form.isNew}
+                                onChange={(e) => setForm({ ...form, isNew: e.target.checked, isExtended: e.target.checked ? false : form.isExtended })}
+                            />
+                            <div>
+                                <span className="font-bold block text-sm">Ata Nova</span>
+                                <span className="text-xs opacity-70">Marque se for um registro novo</span>
+                            </div>
+                        </label>
+
                         <label className={`flex-1 p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${form.isExtended ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300'}`}>
                             <input
                                 type="checkbox"
                                 className="w-5 h-5 accent-blue-600"
                                 checked={form.isExtended}
-                                onChange={(e) => setForm({ ...form, isExtended: e.target.checked })}
+                                onChange={(e) => setForm({ ...form, isExtended: e.target.checked, isNew: e.target.checked ? false : form.isNew })}
                             />
                             <div>
                                 <span className="font-bold block text-sm">Ata Aditivada</span>

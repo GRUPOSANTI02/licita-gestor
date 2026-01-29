@@ -1,63 +1,72 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, FileText, Calendar, Building2, Search, Filter, AlertCircle, CheckCircle2, XCircle, Clock, AlertTriangle, Home } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, FileText, Search, AlertCircle, Clock, AlertTriangle, X, ChevronDown } from "lucide-react";
 import { useTenders } from "@/context/TenderContext";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { useState, useMemo } from "react";
+import { AtaCard } from "@/components/AtaCard";
 
-// Função para calcular dias até o vencimento
-function getDaysUntilExpiry(endDate: string): number {
+function getDaysUntilExpiry(endDate: string | null): number {
+    if (!endDate) return 999;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const expiry = new Date(endDate);
     expiry.setHours(0, 0, 0, 0);
-    const diffTime = expiry.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-// Função para determinar o status de vencimento
-function getExpiryStatus(daysUntil: number): { label: string; color: string; borderColor: string; bgColor: string } {
-    if (daysUntil < 0) {
-        return { label: "VENCIDA", color: "text-red-700", borderColor: "border-red-500", bgColor: "bg-red-50" };
-    } else if (daysUntil <= 7) {
-        return { label: `VENCE EM ${daysUntil} DIA${daysUntil === 1 ? '' : 'S'}`, color: "text-red-600", borderColor: "border-red-400", bgColor: "bg-red-50" };
-    } else if (daysUntil <= 30) {
-        return { label: `VENCE EM ${daysUntil} DIAS`, color: "text-amber-600", borderColor: "border-amber-400", bgColor: "bg-amber-50" };
-    } else {
-        return { label: "ATIVA", color: "text-green-600", borderColor: "border-green-400", bgColor: "bg-green-50" };
-    }
+function getStatus(daysUntil: number): 'ATIVA' | 'VENCE EM BREVE' | 'VENCIDA' {
+    if (daysUntil < 0) return 'VENCIDA';
+    if (daysUntil <= 30) return 'VENCE EM BREVE';
+    return 'ATIVA';
 }
 
 type FilterType = "all" | "expired" | "expiring_soon" | "active" | "extendable" | "adhesion";
 
 export default function AtasPage() {
     const { atas, tenders, isLoading } = useTenders();
+    const router = useRouter();
+
     const [searchTerm, setSearchTerm] = useState("");
     const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+    const [filterCity, setFilterCity] = useState<string[]>([]);
+    const [filterCompany, setFilterCompany] = useState<string[]>([]);
+    const [openMenu, setOpenMenu] = useState<'city' | 'company' | null>(null);
+    const [sortBy, setSortBy] = useState<'vencimento' | 'valor' | 'cidade'>('vencimento');
 
-    // Contadores para os alertas
+    // Enriquecer dados
+    const enrichedAtas = useMemo(() => atas.map(ata => {
+        const tender = tenders.find(t => t.id === ata.tenderId);
+        const daysUntil = getDaysUntilExpiry(ata.endDate);
+        return {
+            ...ata,
+            resolvedTitle: tender?.title || ata.manualTitle || "Sem título",
+            resolvedAgency: tender?.agency || ata.manualAgency || "-",
+            resolvedCity: tender?.city || ata.manualCity || "-",
+            daysUntil,
+            statusLabel: getStatus(daysUntil),
+        };
+    }), [atas, tenders]);
+
+    // Valores únicos para filtros
+    const uniqueCities = useMemo(() => [...new Set(enrichedAtas.map(a => a.resolvedCity))].filter(c => c !== '-').sort(), [enrichedAtas]);
+    const uniqueCompanies = useMemo(() => [...new Set(enrichedAtas.map(a => a.company).filter(Boolean))].sort() as string[], [enrichedAtas]);
+
+    // Contadores
     const counts = useMemo(() => {
-        let expired = 0;
-        let expiringSoon = 0;
-        let active = 0;
-        let newAtas = 0;
-        let extendedAtas = 0;
-        let newAtasValue = 0;
-        let extendedAtasValue = 0;
-
+        let expired = 0, expiringSoon = 0, active = 0, newAtas = 0, extendedAtas = 0, newAtasValue = 0, extendedAtasValue = 0;
         atas.forEach(ata => {
             const days = getDaysUntilExpiry(ata.endDate);
-            if (days < 0) expired++;
-            else if (days <= 30) expiringSoon++;
-            else active++;
-
+            if (days < 0) expired++; else if (days <= 30) expiringSoon++; else active++;
             const tender = tenders.find(t => t.id === ata.tenderId);
-            // Prioriza o valor definido na Ata, depois tenta o valor ganho da licitação, depois o valor estimado
             const value = ata.value || (tender ? (tender.wonValue || tender.value || 0) : 0);
 
-            if (ata.isExtended) {
+            if (ata.isNew) {
+                newAtas++;
+                newAtasValue += value;
+            } else if (ata.isExtended) {
                 extendedAtas++;
                 extendedAtasValue += value;
             } else {
@@ -65,78 +74,83 @@ export default function AtasPage() {
                 newAtasValue += value;
             }
         });
-
         return { expired, expiringSoon, active, newAtas, extendedAtas, newAtasValue, extendedAtasValue };
     }, [atas, tenders]);
 
-    // Filtrar atas
+    // Filtrar e Ordenar
     const filteredAtas = useMemo(() => {
-        return atas.filter(ata => {
-            const relatedTender = tenders.find(t => t.id === ata.tenderId);
-            const title = relatedTender?.title || ata.manualTitle || "";
-            const agency = relatedTender?.agency || ata.manualAgency || "";
-            const city = relatedTender?.city || ata.manualCity || "";
-            const searchLower = searchTerm.toLowerCase();
+        let result = [...enrichedAtas];
 
-            // Filtro de busca
-            const matchesSearch =
-                title.toLowerCase().includes(searchLower) ||
-                agency.toLowerCase().includes(searchLower) ||
-                city.toLowerCase().includes(searchLower) ||
-                (ata.company && ata.company.toLowerCase().includes(searchLower)) ||
-                ata.ataNumber.toLowerCase().includes(searchLower);
+        // 1. Busca
+        if (searchTerm) {
+            const s = searchTerm.toLowerCase();
+            result = result.filter(a =>
+                a.resolvedTitle.toLowerCase().includes(s) ||
+                a.resolvedAgency.toLowerCase().includes(s) ||
+                a.resolvedCity.toLowerCase().includes(s) ||
+                (a.company && a.company.toLowerCase().includes(s)) ||
+                a.ataNumber.toLowerCase().includes(s)
+            );
+        }
 
-            if (!matchesSearch) return false;
-
-            // Filtro de status
-            const days = getDaysUntilExpiry(ata.endDate);
+        // 2. Filtro Pills (Status)
+        result = result.filter(a => {
             switch (activeFilter) {
-                case "expired": return days < 0;
-                case "expiring_soon": return days >= 0 && days <= 30;
-                case "active": return days > 30;
-                case "extendable": return ata.canExtend;
-                case "adhesion": return ata.canAdhere;
+                case "expired": return a.daysUntil < 0;
+                case "expiring_soon": return a.daysUntil >= 0 && a.daysUntil <= 30;
+                case "active": return a.daysUntil > 30;
+                case "extendable": return a.canExtend;
+                case "adhesion": return a.canAdhere;
                 default: return true;
             }
         });
-    }, [atas, tenders, searchTerm, activeFilter]);
 
-    // Retirado o bloqueio de loading para permitir visualização
-    // if (isLoading) {
-    //     return <div className="p-10 text-center font-black animate-pulse">Carregando Atas...</div>;
-    // }
+        // 3. Filtros de Coluna
+        if (filterCity.length > 0) result = result.filter(a => filterCity.includes(a.resolvedCity));
+        if (filterCompany.length > 0) result = result.filter(a => a.company && filterCompany.includes(a.company));
 
-    const filterButtons: { key: FilterType; label: string; count?: number; color: string }[] = [
-        { key: "all", label: "Todas", count: atas.length, color: "bg-slate-100 text-slate-600" },
-        { key: "expired", label: "Vencidas", count: counts.expired, color: "bg-red-100 text-red-700" },
-        { key: "expiring_soon", label: "Próx. Vencimento", count: counts.expiringSoon, color: "bg-amber-100 text-amber-700" },
-        { key: "active", label: "Ativas", count: counts.active, color: "bg-green-100 text-green-700" },
-        { key: "extendable", label: "Prorrogáveis", color: "bg-blue-100 text-blue-700" },
-        { key: "adhesion", label: "Com Adesão", color: "bg-purple-100 text-purple-700" },
+        // 4. Ordenação
+        result.sort((a, b) => {
+            switch (sortBy) {
+                case 'vencimento': return a.daysUntil - b.daysUntil;
+                case 'valor': return (b.value || 0) - (a.value || 0);
+                case 'cidade': return a.resolvedCity.localeCompare(b.resolvedCity);
+                default: return 0;
+            }
+        });
+
+        return result;
+    }, [enrichedAtas, searchTerm, activeFilter, filterCity, filterCompany, sortBy]);
+
+    const toggleFilter = (type: 'city' | 'company', value: string) => {
+        const setter = type === 'city' ? setFilterCity : setFilterCompany;
+        setter(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+    };
+
+    const filterButtons = [
+        { key: "all" as FilterType, label: "Todas", count: atas.length, color: "bg-slate-100 text-slate-600" },
+        { key: "expired" as FilterType, label: "Vencidas", count: counts.expired, color: "bg-red-100 text-red-700" },
+        { key: "expiring_soon" as FilterType, label: "Próx. Vencimento", count: counts.expiringSoon, color: "bg-amber-100 text-amber-700" },
+        { key: "active" as FilterType, label: "Ativas", count: counts.active, color: "bg-green-100 text-green-700" },
+        { key: "extendable" as FilterType, label: "Prorrogáveis", color: "bg-blue-100 text-blue-700" },
+        { key: "adhesion" as FilterType, label: "Com Adesão", color: "bg-purple-100 text-purple-700" },
     ];
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
+            {openMenu && <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />}
+
             {/* HEADER */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <div className="flex items-center gap-3">
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gestão de Atas</h1>
-                        {isLoading && (
-                            <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-full animate-pulse">
-                                Carregando...
-                            </span>
-                        )}
+                        {isLoading && <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-full animate-pulse">Carregando...</span>}
                     </div>
                     <p className="text-slate-500 font-medium">Acompanhe seus registros de preços e vencimentos.</p>
                 </div>
-
-                <Link
-                    href="/atas/new"
-                    className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20"
-                >
-                    <Plus className="w-4 h-4" />
-                    Nova Ata
+                <Link href="/atas/new" className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20">
+                    <Plus className="w-4 h-4" /> Nova Ata
                 </Link>
             </div>
 
@@ -150,9 +164,7 @@ export default function AtasPage() {
                             <span className="text-sm font-bold text-slate-500">{formatCurrency(counts.newAtasValue)}</span>
                         </div>
                     </div>
-                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-blue-600" />
-                    </div>
+                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center"><FileText className="w-6 h-6 text-blue-600" /></div>
                 </div>
                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
@@ -162,193 +174,134 @@ export default function AtasPage() {
                             <span className="text-sm font-bold text-slate-500">{formatCurrency(counts.extendedAtasValue)}</span>
                         </div>
                     </div>
-                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-amber-600" />
-                    </div>
+                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center"><AlertCircle className="w-6 h-6 text-amber-600" /></div>
                 </div>
             </div>
 
             {/* ALERTAS */}
             {(counts.expired > 0 || counts.expiringSoon > 0) && (
                 <div className="flex flex-wrap gap-4">
-                    {counts.expired > 0 && (
-                        <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-2xl">
-                            <AlertTriangle className="w-5 h-5" />
-                            <span className="font-bold text-sm">
-                                {counts.expired} ata{counts.expired > 1 ? 's' : ''} vencida{counts.expired > 1 ? 's' : ''}!
-                            </span>
-                        </div>
-                    )}
-                    {counts.expiringSoon > 0 && (
-                        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-2xl">
-                            <Clock className="w-5 h-5" />
-                            <span className="font-bold text-sm">
-                                {counts.expiringSoon} ata{counts.expiringSoon > 1 ? 's' : ''} vencendo nos próximos 30 dias
-                            </span>
-                        </div>
-                    )}
+                    {counts.expired > 0 && <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-2xl"><AlertTriangle className="w-5 h-5" /><span className="font-bold text-sm">{counts.expired} ata{counts.expired > 1 ? 's' : ''} vencida{counts.expired > 1 ? 's' : ''}!</span></div>}
+                    {counts.expiringSoon > 0 && <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-2xl"><Clock className="w-5 h-5" /><span className="font-bold text-sm">{counts.expiringSoon} ata{counts.expiringSoon > 1 ? 's' : ''} vencendo nos próximos 30 dias</span></div>}
                 </div>
             )}
 
-            {/* BUSCA E FILTROS HEADER (MANTIDO PARA BUSCA GLOBAL) */}
+            {/* BUSCA E FILTROS */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4">
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Buscar geral..."
-                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium text-slate-600 focus:ring-2 focus:ring-amber-500"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input type="text" placeholder="Buscar por título, órgão, cidade ou número..." className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium text-slate-600 focus:ring-2 focus:ring-amber-500" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    </div>
+
+                    {/* Filtros Dropdown */}
+                    <div className="flex gap-2">
+                        {/* Cidade */}
+                        <div className="relative">
+                            <button onClick={() => setOpenMenu(openMenu === 'city' ? null : 'city')} className={`px-4 py-3 rounded-xl border text-xs font-bold uppercase flex items-center gap-2 transition-all ${filterCity.length > 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                                Cidade {filterCity.length > 0 && `(${filterCity.length})`} <ChevronDown className="w-4 h-4" />
+                            </button>
+                            {openMenu === 'city' && (
+                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 min-w-[200px] p-2 max-h-60 overflow-y-auto">
+                                    {uniqueCities.map(city => (
+                                        <label key={city} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer text-sm">
+                                            <input type="checkbox" checked={filterCity.includes(city)} onChange={() => toggleFilter('city', city)} className="accent-amber-500 w-4 h-4" /> {city}
+                                        </label>
+                                    ))}
+                                    {filterCity.length > 0 && <button onClick={() => setFilterCity([])} className="w-full text-center text-xs text-red-500 font-bold mt-2 pt-2 border-t">Limpar</button>}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Empresa */}
+                        <div className="relative">
+                            <button onClick={() => setOpenMenu(openMenu === 'company' ? null : 'company')} className={`px-4 py-3 rounded-xl border text-xs font-bold uppercase flex items-center gap-2 transition-all ${filterCompany.length > 0 ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                                Empresa {filterCompany.length > 0 && `(${filterCompany.length})`} <ChevronDown className="w-4 h-4" />
+                            </button>
+                            {openMenu === 'company' && (
+                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 min-w-[200px] p-2 max-h-60 overflow-y-auto">
+                                    {uniqueCompanies.map(comp => (
+                                        <label key={comp} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer text-sm">
+                                            <input type="checkbox" checked={filterCompany.includes(comp)} onChange={() => toggleFilter('company', comp)} className="accent-amber-500 w-4 h-4" /> {comp}
+                                        </label>
+                                    ))}
+                                    {filterCompany.length > 0 && <button onClick={() => setFilterCompany([])} className="w-full text-center text-xs text-red-500 font-bold mt-2 pt-2 border-t">Limpar</button>}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
+
+                {/* Status Pills */}
                 <div className="flex flex-wrap gap-2">
                     {filterButtons.map(btn => (
-                        <button
-                            key={btn.key}
-                            onClick={() => setActiveFilter(btn.key)}
-                            className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${activeFilter === btn.key
-                                ? `${btn.color} ring-2 ring-offset-1 ring-slate-400`
-                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
-                                }`}
-                        >
-                            {btn.label}
-                            {btn.count !== undefined && (
-                                <span className="ml-1.5 opacity-70">({btn.count})</span>
-                            )}
+                        <button key={btn.key} onClick={() => setActiveFilter(btn.key)} className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${activeFilter === btn.key ? `${btn.color} ring-2 ring-offset-1 ring-slate-400` : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                            {btn.label}{btn.count !== undefined && <span className="ml-1.5 opacity-70">({btn.count})</span>}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Indicadores de Filtros Ativos */}
+                {(filterCity.length > 0 || filterCompany.length > 0) && (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                        <span className="text-xs text-slate-400 font-bold">Filtros:</span>
+                        {filterCity.map(c => <span key={c} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold flex items-center gap-1">{c} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleFilter('city', c)} /></span>)}
+                        {filterCompany.map(c => <span key={c} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold flex items-center gap-1">{c} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleFilter('company', c)} /></span>)}
+                    </div>
+                )}
+            </div>
+
+            {/* ORDENAÇÃO */}
+            <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500 font-medium">{filteredAtas.length} ata{filteredAtas.length !== 1 ? 's' : ''} encontrada{filteredAtas.length !== 1 ? 's' : ''}</p>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 font-bold">Ordenar:</span>
+                    {[
+                        { key: 'vencimento', label: 'Vencimento' },
+                        { key: 'valor', label: 'Valor' },
+                        { key: 'cidade', label: 'Cidade' },
+                    ].map(opt => (
+                        <button key={opt.key} onClick={() => setSortBy(opt.key as any)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${sortBy === opt.key ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                            {opt.label}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* TABELA DE ATAS */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-black tracking-widest text-slate-500">
-                                <th className="p-4 whitespace-nowrap min-w-[100px]">
-                                    <div className="flex items-center gap-2 cursor-pointer hover:text-slate-800">
-                                        Status <Filter className="w-3 h-3" />
-                                    </div>
-                                </th>
-                                <th className="p-4 whitespace-nowrap">
-                                    <div className="flex items-center gap-2 cursor-pointer hover:text-slate-800">
-                                        Vencimento <Filter className="w-3 h-3" />
-                                    </div>
-                                </th>
-                                <th className="p-4 w-full min-w-[300px]">
-                                    <div className="flex items-center gap-2 cursor-pointer hover:text-slate-800">
-                                        Objeto / Descrição <Filter className="w-3 h-3" />
-                                    </div>
-                                </th>
-                                <th className="p-4 whitespace-nowrap min-w-[200px]">
-                                    <div className="flex items-center gap-2 cursor-pointer hover:text-slate-800">
-                                        Órgão / Cidade <Filter className="w-3 h-3" />
-                                    </div>
-                                </th>
-                                <th className="p-4 whitespace-nowrap min-w-[150px]">
-                                    <div className="flex items-center gap-2 cursor-pointer hover:text-slate-800">
-                                        Empresa <Filter className="w-3 h-3" />
-                                    </div>
-                                </th>
-                                <th className="p-4 text-right whitespace-nowrap min-w-[150px]">
-                                    <div className="flex items-center justify-end gap-2 cursor-pointer hover:text-slate-800">
-                                        Valor Total <Filter className="w-3 h-3" />
-                                    </div>
-                                </th>
-                                <th className="p-4 text-center w-[80px]">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filteredAtas.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="p-10 text-center text-slate-400 text-sm">
-                                        Nenhuma ata encontrada com os filtros atuais.
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredAtas.map((ata, index) => {
-                                    const relatedTender = tenders.find(t => t.id === ata.tenderId);
-                                    const title = relatedTender?.title || ata.manualTitle || "Sem título";
-                                    const agency = relatedTender?.agency || ata.manualAgency || "-";
-                                    const city = relatedTender?.city || ata.manualCity || "-";
-                                    const daysUntil = getDaysUntilExpiry(ata.endDate);
-                                    const expiryStatus = getExpiryStatus(daysUntil);
-
-                                    return (
-                                        <tr
-                                            key={ata.id}
-                                            className={`group hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
-                                            onClick={() => window.location.href = `/atas/${ata.id}/edit`}
-                                        >
-                                            {/* STATUS */}
-                                            <td className="p-4 align-top">
-                                                <div className={`inline-flex items-center px-2 py-1 rounded text-[10px] font-black uppercase tracking-wide border ${expiryStatus.bgColor} ${expiryStatus.color} ${expiryStatus.borderColor}`}>
-                                                    {expiryStatus.label === "ATIVE" ? "ATIVA" : expiryStatus.label}
-                                                </div>
-                                                {ata.isExtended && <div className="mt-1 text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded w-fit uppercase">Aditivada</div>}
-                                            </td>
-
-                                            {/* VENCIMENTO */}
-                                            <td className="p-4 align-top">
-                                                <div className="font-bold text-slate-700 text-sm">{formatDate(ata.endDate)}</div>
-                                                <div className="text-xs text-slate-400 mt-1">Início: {formatDate(ata.startDate)}</div>
-                                            </td>
-
-                                            {/* OBJETO */}
-                                            <td className="p-4 align-top">
-                                                <div className="font-bold text-slate-800 text-sm group-hover:text-amber-600 transition-colors line-clamp-2">
-                                                    {title}
-                                                </div>
-                                                <div className="mt-1 flex gap-2">
-                                                    <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold">Nº {ata.ataNumber}</span>
-                                                    {ata.canAdhere && <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold">Carona</span>}
-                                                </div>
-                                            </td>
-
-                                            {/* ORIGEM */}
-                                            <td className="p-4 align-top">
-                                                <div className="font-bold text-slate-700 text-xs">{agency}</div>
-                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{city}</div>
-                                            </td>
-
-                                            {/* EMPRESA */}
-                                            <td className="p-4 align-top">
-                                                {ata.company ? (
-                                                    <div className="font-bold text-slate-600 text-xs uppercase flex items-center gap-1.5">
-                                                        <Home className="w-3 h-3 text-slate-400" />
-                                                        {ata.company}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-slate-300 text-xs">-</span>
-                                                )}
-                                            </td>
-
-                                            {/* VALOR */}
-                                            <td className="p-4 align-top text-right">
-                                                <div className="font-black text-slate-800 text-sm">
-                                                    {ata.value ? formatCurrency(ata.value) : <span className="text-slate-300">R$ --</span>}
-                                                </div>
-                                            </td>
-
-                                            {/* AÇÕES */}
-                                            <td className="p-4 align-top text-center">
-                                                <Link
-                                                    href={`/atas/${ata.id}/edit`}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-800 transition-all mx-auto"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            {/* LISTA DE CARDS */}
+            <div className="space-y-4">
+                {filteredAtas.length === 0 ? (
+                    <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center">
+                        <p className="text-slate-400 text-sm">Nenhuma ata encontrada com os filtros atuais.</p>
+                    </div>
+                ) : (
+                    filteredAtas.map(ata => (
+                        <AtaCard
+                            key={ata.id}
+                            data={{
+                                id: ata.id,
+                                numero: ata.ataNumber,
+                                status: ata.statusLabel,
+                                tags: [
+                                    ...(ata.isNew ? ['NOVA'] : []),
+                                    ...(ata.isExtended ? ['ADITIVADA'] : []),
+                                    ...(ata.canAdhere ? ['CARONA'] : []),
+                                ],
+                                objeto: ata.resolvedTitle,
+                                cidade: ata.resolvedCity,
+                                orgao: ata.resolvedAgency,
+                                fornecedor: ata.company || '-',
+                                valor_total: ata.value || 0,
+                                data_inicio: ata.startDate,
+                                data_vencimento: ata.endDate,
+                                prorrogavel: ata.canExtend || false,
+                                tem_pdf: !!ata.pdfUrl,
+                                pdfUrl: ata.pdfUrl,
+                            }}
+                            onClick={() => router.push(`/atas/${ata.id}/edit`)}
+                        />
+                    ))
+                )}
             </div>
         </div>
     );

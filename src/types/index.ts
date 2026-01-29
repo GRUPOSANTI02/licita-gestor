@@ -53,6 +53,7 @@ export interface Ata {
     attachmentUrl?: string; // Upload no Supabase
     observations?: string;
     isExtended: boolean;
+    isNew?: boolean;
     company?: string; // Nome da empresa detentora da ata
     createdAt: string;
     updatedAt: string;

@@ -137,6 +137,7 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                         attachmentUrl: a.attachment_url,
                         observations: a.observations,
                         isExtended: a.is_extended,
+                        isNew: a.is_new,
                         company: a.company,
                         createdAt: a.created_at,
                         updatedAt: a.updated_at,
@@ -324,6 +325,7 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                 attachment_url: data.attachmentUrl,
                 observations: data.observations,
                 is_extended: data.isExtended,
+                is_new: data.isNew,
                 company: data.company,
                 updated_at: newAta.updatedAt
             };
@@ -358,6 +360,7 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             if (data.attachmentUrl !== undefined) supabaseData.attachment_url = data.attachmentUrl;
             if (data.observations !== undefined) supabaseData.observations = data.observations;
             if (data.isExtended !== undefined) supabaseData.is_extended = data.isExtended;
+            if (data.isNew !== undefined) supabaseData.is_new = data.isNew;
             if (data.company !== undefined) supabaseData.company = data.company;
 
             const { error } = await supabase.from('atas').update(supabaseData).eq('id', id);
