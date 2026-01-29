@@ -160,9 +160,14 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
 
     const updateTender = async (id: string, data: Partial<Tender>) => {
         // Atualiza estado local imediatamente e força persistência
+        console.log("Forçando atualização:", id, data);
         setTenders(prev => {
             const updated = prev.map(t => (t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t));
-            localStorage.setItem("licita_gestor_data", JSON.stringify(updated));
+            try {
+                localStorage.setItem("licita_gestor_data", JSON.stringify(updated));
+            } catch (err) {
+                console.error("Erro critico ao salvar:", err);
+            }
             return updated;
         });
 

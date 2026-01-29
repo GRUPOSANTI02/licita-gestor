@@ -58,10 +58,29 @@ export default function EditTenderPage() {
                     value: maskCurrency(Math.round(tender.value * 100).toString()),
                     wonValue: tender.wonValue ? maskCurrency(Math.round(tender.wonValue * 100).toString()) : "",
                     status: safeStatus,
-                    deadline: tender.deadline ? new Date(new Date(tender.deadline).getTime() - (new Date(tender.deadline).getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
+                    // Correção de Fuso Horário: Usar o valor salvo sem conversão UTC excessiva
+                    // Para inputs datetime-local, precisamos do formato YYYY-MM-DDTHH:mm
+                    const formatForInput = (dateStr: string | null) => {
+                        if (!dateStr) return "";
+                        const d = new Date(dateStr);
+                        // Ajusta para o fuso local do usuário para exibir corretamente no input
+                        const offset = d.getTimezoneOffset() * 60000;
+                        const localDate = new Date(d.getTime() - offset);
+                        return localDate.toISOString().slice(0, 16);
+                    };
+
+                    setForm({
+                        tenderNumber: tender.tenderNumber || "",
+                    title: tender.title,
+                    agency: tender.agency,
+                    city: tender.city,
+                    value: maskCurrency(Math.round(tender.value * 100).toString()),
+                    wonValue: tender.wonValue ? maskCurrency(Math.round(tender.wonValue * 100).toString()) : "",
+                    status: safeStatus,
+                    deadline: formatForInput(tender.deadline),
                     description: tender.description || "",
                     editalUrl: tender.editalUrl || "",
-                    nextSessionDate: tender.nextSessionDate ? new Date(new Date(tender.nextSessionDate).getTime() - (new Date(tender.nextSessionDate).getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
+                    nextSessionDate: formatForInput(tender.nextSessionDate),
                 });
             } else {
                 router.push("/tenders");
