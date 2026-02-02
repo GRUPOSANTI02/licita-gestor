@@ -12,8 +12,7 @@ export function SalesChart() {
 
         // Gerar o ano completo: de Janeiro a Dezembro do ano atual
         for (let i = 0; i < 12; i++) {
-            const d = new Date(currentYear, i, 1);
-            months.push(d);
+            months.push(new Date(currentYear, i, 1));
         }
 
         return months.map(monthDate => {
@@ -27,107 +26,92 @@ export function SalesChart() {
                 return tDate >= startOfMonth && tDate <= endOfMonth;
             });
 
-            // Normalizar status para facilitar
             const normalizeStatus = (s: string) => String(s || '').toLowerCase().trim();
 
-            const isPending = (s: string) =>
-                ['pending', 'in_progress', 'aguardando', 'em análise', 'running', 'em andamento', 'em disputa'].includes(normalizeStatus(s));
+            const isWon = (s: string) => ['won', 'ganha', 'ativa', 'concluída'].includes(normalizeStatus(s));
+            const isPending = (s: string) => ['pending', 'in_progress', 'aguardando', 'em análise', 'running', 'em andamento', 'em disputa'].includes(normalizeStatus(s));
 
-            const isWon = (s: string) =>
-                ['won', 'ganha', 'ativa', 'concluída'].includes(normalizeStatus(s));
-
-            // Pendente: Soma dos values
-            const pending = monthlyTenders
-                .filter(t => isPending(t.status))
-                .reduce((acc, t) => acc + (t.value || 0), 0);
-
-            // Realizado: Soma dos wonValues (ou value se não tiver wonValue)
             const realized = monthlyTenders
                 .filter(t => isWon(t.status))
                 .reduce((acc, t) => acc + (t.wonValue || t.value || 0), 0);
 
-            // Projeção Total do Mês = O que já ganhei + O que está na mesa para ganhar
-            const totalPotential = pending + realized;
+            const pending = monthlyTenders
+                .filter(t => isPending(t.status))
+                .reduce((acc, t) => acc + (t.value || 0), 0);
+
+            const total = realized + pending;
 
             return {
                 month: monthDate.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase().slice(0, 3),
                 fullDate: monthDate,
-                projected: totalPotential, // Barra de fundo (Total Potencial)
-                value: realized,           // Barra de frente (Já Realizado)
-                pendingOnly: pending       // Apenas pendente (se precisar)
+                realized,
+                pending,
+                total
             };
         });
     }, [tenders]);
 
-    const maxValue = Math.max(...chartData.map(d => d.projected), 10000);
+    const maxTotal = Math.max(...chartData.map(d => d.total), 10000);
 
     return (
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-full flex flex-col">
-            <div className="mb-6 flex flex-col gap-1">
-                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Performance Anual</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Comparativo Potencial vs. Realizado ({new Date().getFullYear()})</p>
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm h-full flex flex-col">
+            <div className="mb-8 flex items-center justify-between">
+                <div>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Vendas & Previsão</h3>
+                    <p className="text-[10px] text-slate-400 font-medium mt-1">Visão mensal consolidada ({new Date().getFullYear()})</p>
+                </div>
+                <div className="flex gap-4 text-[9px] font-bold uppercase tracking-widest hidden sm:flex">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                        <span className="text-slate-600">Realizado</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                        <span className="text-slate-400">Em Aberto</span>
+                    </div>
+                </div>
             </div>
 
-            <div className="flex items-end justify-between gap-2 flex-1 w-full min-h-[200px]">
+            <div className="flex items-end justify-between gap-2 flex-1 w-full min-h-[180px]">
                 {chartData.map((item, index) => {
-                    // Garantir que não ultrapasse 100%
-                    const projectedHeight = Math.min((item.projected / maxValue) * 100, 100);
-                    const realizedHeight = Math.min((item.value / maxValue) * 100, 100);
+                    const totalHeightPercent = (item.total / maxTotal) * 100;
 
-                    // Verificar se é o mês atual
-                    const isCurrentMonth = new Date().getMonth() === item.fullDate.getMonth() && new Date().getFullYear() === item.fullDate.getFullYear();
+                    // Porcentagem do realizado dentro da barra total
+                    const realizedPercentOfBar = item.total > 0 ? (item.realized / item.total) * 100 : 0;
+
+                    const isCurrentMonth = new Date().getMonth() === item.fullDate.getMonth() &&
+                        new Date().getFullYear() === item.fullDate.getFullYear();
 
                     return (
-                        <div key={index} className="flex flex-col items-center flex-1 gap-3 group cursor-pointer h-full justify-end">
-                            <div className="relative w-full flex items-end justify-center h-full">
-                                <div className="relative w-full h-full bg-slate-50 rounded-xl overflow-hidden ring-0 transition-all group-hover:ring-2 ring-blue-100 flex items-end">
-                                    {/* Barra de Projeção (Fundo - Potencial Total) */}
+                        <div key={index} className="flex flex-col items-center flex-1 gap-3 h-full justify-end group cursor-pointer">
+                            {/* Área da Barra */}
+                            <div className="w-full flex justify-center items-end h-full relative">
+                                {/* Barra Visual Empilhada (Stacked) */}
+                                <div
+                                    className={`w-3 sm:w-5 md:w-8 transition-all duration-500 rounded-t-sm overflow-hidden relative flex flex-col-reverse justify-start ${item.total === 0 ? 'bg-slate-50 h-[2px]' : 'bg-slate-200'}`}
+                                    style={{ height: item.total === 0 ? '2px' : `${totalHeightPercent}%` }}
+                                >
+                                    {/* Parte Realizada (Azul) */}
                                     <div
-                                        className={`w-full absolute bottom-0 transition-all duration-700 ease-out ${isCurrentMonth ? 'bg-blue-100' : 'bg-slate-100'} group-hover:bg-blue-200`}
-                                        style={{ height: `${projectedHeight}%` }}
-                                    ></div>
-
-                                    {/* Barra de Realizado (Frente) */}
-                                    <div
-                                        className={`w-full absolute bottom-0 transition-all duration-700 ease-out ${isCurrentMonth ? 'bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'bg-slate-800'}`}
-                                        style={{ height: `${realizedHeight}%` }}
+                                        className={`w-full transition-all duration-700 ${isCurrentMonth ? 'bg-blue-600' : 'bg-slate-800'}`}
+                                        style={{ height: `${realizedPercentOfBar}%` }}
                                     ></div>
                                 </div>
 
-                                {/* Tooltip Customizado */}
-                                <div className="hidden group-hover:flex absolute bottom-full mb-3 flex-col bg-slate-900/95 backdrop-blur-md text-white text-[10px] rounded-xl p-3 z-50 shadow-xl border border-slate-700 min-w-[140px] animate-in fade-in slide-in-from-bottom-2">
-                                    <span className="font-black text-white text-xs mb-2 border-b border-slate-700 pb-1 block uppercase tracking-wide">{item.month}</span>
-                                    <div className="flex justify-between gap-3 text-slate-400">
-                                        <span>Potencial:</span>
-                                        <span className="font-bold text-slate-200">{formatCurrency(item.projected)}</span>
-                                    </div>
-                                    <div className="flex justify-between gap-3 text-emerald-400 mt-0.5">
-                                        <span>Realizado:</span>
-                                        <span className="font-bold text-emerald-300">{formatCurrency(item.value)}</span>
-                                    </div>
-                                    {item.pendingOnly > 0 && (
-                                        <div className="flex justify-between gap-3 text-amber-500 mt-1 border-t border-slate-700/50 pt-1">
-                                            <span>Em Jogo:</span>
-                                            <span className="font-bold">{formatCurrency(item.pendingOnly)}</span>
-                                        </div>
-                                    )}
+                                {/* Tooltip Minimalista (Só no hover) */}
+                                <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] px-3 py-2 rounded-lg pointer-events-none whitespace-nowrap z-10 flex flex-col items-center shadow-lg">
+                                    <span className="font-bold">{formatCurrency(item.realized)}</span>
+                                    {item.pending > 0 && <span className="text-slate-400 text-[9px] border-t border-slate-700 mt-1 pt-1 w-full text-center">+ {formatCurrency(item.pending)}</span>}
                                 </div>
                             </div>
-                            <span className={`text-[9px] font-black uppercase tracking-wider ${isCurrentMonth ? 'text-blue-600' : 'text-slate-300'}`}>{item.month}</span>
+
+                            {/* Rótulo do Mês */}
+                            <span className={`text-[9px] font-bold uppercase tracking-wider ${isCurrentMonth ? 'text-blue-600' : 'text-slate-300'}`}>
+                                {item.month}
+                            </span>
                         </div>
                     );
                 })}
-            </div>
-
-            <div className="flex items-center gap-6 mt-6 justify-center text-[10px] font-black uppercase tracking-widest border-t border-slate-50 pt-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-800 rounded-full"></div>
-                    <span className="text-slate-600">Conquistado</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
-                    <span className="text-slate-400">Potencial Total</span>
-                </div>
             </div>
         </div>
     );
