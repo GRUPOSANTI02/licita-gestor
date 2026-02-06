@@ -228,6 +228,21 @@ export default function NewTenderPage() {
                         </div>
 
                         <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Valor Estimado / Edital</label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">R$</span>
+                                <input
+                                    required
+                                    type="text"
+                                    placeholder="0,00"
+                                    className="w-full p-4 pl-12 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-bold text-slate-700"
+                                    value={form.value}
+                                    onChange={(e) => setForm({ ...form, value: maskCurrency(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400">Data e Hora Limite</label>
                             <input
                                 required
