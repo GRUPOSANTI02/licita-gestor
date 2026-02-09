@@ -51,11 +51,17 @@ function NewAtaContent() {
 
     // Filtra apenas licitações ganhas para vincular a ata
     // (Geralmente só se tem ata de licitação ganha, mas deixei aberto se quiser vincular a outras)
+    const normalize = (str: string | undefined | null) => (str || "").toLowerCase();
+
     const availableTenders = tenders
-        .filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.agency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.tenderNumber?.includes(searchTerm))
-        .sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime());
+        .filter(t =>
+            normalize(t.title).includes(normalize(searchTerm)) ||
+            normalize(t.agency).includes(normalize(searchTerm)) ||
+            normalize(t.city).includes(normalize(searchTerm)) ||
+            normalize(t.tenderNumber).includes(normalize(searchTerm))
+        )
+        .sort((a, b) => new Date(b.deadline || new Date()).getTime() - new Date(a.deadline || new Date()).getTime())
+        .slice(0, 50);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
