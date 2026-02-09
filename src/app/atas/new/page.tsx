@@ -100,11 +100,11 @@ function NewAtaContent() {
                 const { data } = supabase.storage.from('ATAS').getPublicUrl(filePath);
                 finalAttachmentUrl = data.publicUrl;
 
-            } catch (error) {
-                console.error("Erro no upload:", error);
-                alert("Erro ao fazer upload do arquivo. Verifique se o bucket 'ATAS' existe no Supabase.");
+            } catch (error: any) {
+                console.error("Erro detalhado no upload:", error);
+                alert(`Erro no upload: ${error.message || JSON.stringify(error)}. O bucket 'ATAS' existe e é público?`);
                 setUploading(false);
-                return; // Para o salvamento se falhar o upload
+                return;
             }
             setUploading(false);
         } else if (selectedFile && !isSupabaseConfigured) {
