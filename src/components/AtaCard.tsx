@@ -18,6 +18,7 @@ interface AtaCardData {
     prorrogavel: boolean;
     tem_pdf: boolean;
     pdfUrl?: string;
+    attachmentUrl?: string;
 }
 
 interface AtaCardProps {
@@ -28,6 +29,10 @@ interface AtaCardProps {
 export function AtaCard({ data, onClick }: AtaCardProps) {
     const isNew = data.tags.includes('NOVA');
     const isExtended = data.tags.includes('ADITIVADA');
+
+    // Prioriza o arquivo uploaded, senão usa o link externo
+    const downloadLink = data.attachmentUrl || data.pdfUrl;
+    const hasDownload = !!downloadLink;
 
     // Tema Base (Novas vs Aditivadas vs Padrão)
     const themeStyles = isNew
@@ -131,9 +136,16 @@ export function AtaCard({ data, onClick }: AtaCardProps) {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {data.tem_pdf && (
-                                <a href={data.pdfUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                                    <Download className="w-3.5 h-3.5" />
+                            {hasDownload && (
+                                <a
+                                    href={downloadLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm group/download"
+                                    title="Baixar Anexo"
+                                >
+                                    <Download className="w-3.5 h-3.5 group-hover/download:animate-bounce" />
                                 </a>
                             )}
                             <button onClick={(e) => { e.stopPropagation(); onClick?.(); }} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-slate-900 hover:text-white transition-all">

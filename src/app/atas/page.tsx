@@ -325,6 +325,7 @@ export default function AtasPage() {
                                 prorrogavel: ata.canExtend || false,
                                 tem_pdf: !!ata.pdfUrl,
                                 pdfUrl: ata.pdfUrl,
+                                attachmentUrl: ata.attachmentUrl,
                             }}
                             onClick={() => router.push(`/atas/${ata.id}/edit`)}
                         />
