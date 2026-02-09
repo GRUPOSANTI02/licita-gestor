@@ -140,7 +140,7 @@ export default function EditTenderPage() {
 
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10">
                 <div className="mb-10">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Editar Licitação <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full ml-2">v5.0 Fix</span></h1>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight text-red-600">EDITAR LICITAÇÃO (TESTE DEBUG) <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full ml-2">v6.0</span></h1>
                     <p className="text-slate-500 font-medium">Atualize os detalhes da sua disputa.</p>
                 </div>
 
@@ -318,6 +318,27 @@ export default function EditTenderPage() {
                             value={form.editalUrl}
                             onChange={(e) => setForm({ ...form, editalUrl: e.target.value })}
                         />
+                    </div>
+
+                    {/* BLOCO NO FINAL (FORA DE GRID COMPLICADO) */}
+                    <div className="bg-slate-100 p-6 rounded-2xl border-2 border-slate-300 mt-8 mb-8">
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 block">Tipo de Sessão (FINAL TESTE)</label>
+                        <div className="flex gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setForm({ ...form, sessionType: 'eletronica' })}
+                                className={`flex-1 p-4 rounded-xl font-bold uppercase transition-all border-2 ${form.sessionType === 'eletronica' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-400'}`}
+                            >
+                                🖥️ Eletrônica
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setForm({ ...form, sessionType: 'presencial' })}
+                                className={`flex-1 p-4 rounded-xl font-bold uppercase transition-all border-2 ${form.sessionType === 'presencial' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-400'}`}
+                            >
+                                🏛️ Presencial
+                            </button>
+                        </div>
                     </div>
 
                     <div className="pt-8 border-t border-slate-100 flex justify-end gap-4">
