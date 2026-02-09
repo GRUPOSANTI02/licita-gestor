@@ -140,37 +140,12 @@ export default function EditTenderPage() {
 
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10">
                 <div className="mb-10">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight text-red-600">EDITAR LICITAÇÃO (TESTE DEBUG) <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full ml-2">v6.0</span></h1>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Editar Licitação <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full ml-2">v6.0</span></h1>
                     <p className="text-slate-500 font-medium">Atualize os detalhes da sua disputa.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* TIPO DE SESSÃO - MOVIDO PARA O TOPO PARA TESTE */}
-                        <div className="space-y-2 md:col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Tipo de Sessão (Teste Visibilidade)</label>
-                            <div className="flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setForm({ ...form, sessionType: 'eletronica' })}
-                                    className={`flex-1 px-6 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all border-2 flex items-center justify-center gap-3 ${form.sessionType === 'eletronica'
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
-                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
-                                >
-                                    🖥️ Eletrônica
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setForm({ ...form, sessionType: 'presencial' })}
-                                    className={`flex-1 px-6 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all border-2 flex items-center justify-center gap-3 ${form.sessionType === 'presencial'
-                                        ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200'
-                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
-                                >
-                                    🏛️ Presencial
-                                </button>
-                            </div>
-                        </div>
-
                         {/* Status */}
                         <div className="space-y-2 md:col-span-2">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400">Status da Licitação</label>
@@ -195,7 +170,30 @@ export default function EditTenderPage() {
                             </div>
                         </div>
 
-
+                        {/* TIPO DE SESSÃO */}
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Tipo de Sessão</label>
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setForm({ ...form, sessionType: 'eletronica' })}
+                                    className={`flex-1 px-6 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all border-2 flex items-center justify-center gap-3 ${form.sessionType === 'eletronica'
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                >
+                                    🖥️ Eletrônica
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setForm({ ...form, sessionType: 'presencial' })}
+                                    className={`flex-1 px-6 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all border-2 flex items-center justify-center gap-3 ${form.sessionType === 'presencial'
+                                        ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                >
+                                    🏛️ Presencial
+                                </button>
+                            </div>
+                        </div>
 
                         {/* Won Value */}
                         {form.status === 'won' && (
@@ -318,27 +316,6 @@ export default function EditTenderPage() {
                             value={form.editalUrl}
                             onChange={(e) => setForm({ ...form, editalUrl: e.target.value })}
                         />
-                    </div>
-
-                    {/* BLOCO NO FINAL (FORA DE GRID COMPLICADO) */}
-                    <div className="bg-slate-100 p-6 rounded-2xl border-2 border-slate-300 mt-8 mb-8">
-                        <label className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 block">Tipo de Sessão (FINAL TESTE)</label>
-                        <div className="flex gap-4">
-                            <button
-                                type="button"
-                                onClick={() => setForm({ ...form, sessionType: 'eletronica' })}
-                                className={`flex-1 p-4 rounded-xl font-bold uppercase transition-all border-2 ${form.sessionType === 'eletronica' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-400'}`}
-                            >
-                                🖥️ Eletrônica
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setForm({ ...form, sessionType: 'presencial' })}
-                                className={`flex-1 p-4 rounded-xl font-bold uppercase transition-all border-2 ${form.sessionType === 'presencial' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-400'}`}
-                            >
-                                🏛️ Presencial
-                            </button>
-                        </div>
                     </div>
 
                     <div className="pt-8 border-t border-slate-100 flex justify-end gap-4">
