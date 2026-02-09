@@ -73,7 +73,10 @@ export default function TendersPage() {
                                     <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${getStatusColor(tender.status)}`}>
                                         {getStatusLabel(tender.status)}
                                     </span>
-                                    <h3 className="text-lg font-bold text-slate-800">{tender.title}</h3>
+                                    <h3 className="text-lg font-bold text-slate-800">
+                                        {tender.sessionType === 'presencial' ? '🏛️ ' : '🖥️ '}
+                                        {tender.title}
+                                    </h3>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-6 text-sm text-slate-500">
