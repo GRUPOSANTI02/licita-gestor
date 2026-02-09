@@ -87,9 +87,9 @@ function NewAtaContent() {
                 const fileName = `${Math.random()}.${fileExt}`;
                 const filePath = `${fileName}`;
 
-                // Tenta fazer upload para o bucket 'ATAS' (precisa estar criado no Supabase)
+                // Tenta fazer upload para o bucket 'atas' (precisa estar criado no Supabase)
                 const { error: uploadError } = await supabase.storage
-                    .from('ATAS')
+                    .from('atas')
                     .upload(filePath, selectedFile);
 
                 if (uploadError) {
@@ -97,12 +97,12 @@ function NewAtaContent() {
                 }
 
                 // Pega a URL pública
-                const { data } = supabase.storage.from('ATAS').getPublicUrl(filePath);
+                const { data } = supabase.storage.from('atas').getPublicUrl(filePath);
                 finalAttachmentUrl = data.publicUrl;
 
             } catch (error: any) {
                 console.error("Erro detalhado no upload:", error);
-                alert(`Erro no upload: ${error.message || JSON.stringify(error)}. O bucket 'ATAS' existe e é público?`);
+                alert(`Erro no upload: ${error.message || JSON.stringify(error)}. O bucket 'atas' (minúsculo) existe e é público? Tente rodar o SQL de correção novamente.`);
                 setUploading(false);
                 return;
             }
