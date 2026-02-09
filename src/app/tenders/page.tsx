@@ -73,10 +73,6 @@ export default function TendersPage() {
                                     <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${getStatusColor(tender.status)}`}>
                                         {getStatusLabel(tender.status)}
                                     </span>
-                                    {/* DEBUG TEMPORÁRIO PARA DIAGNÓSTICO DO USUÁRIO */}
-                                    <span className="text-[9px] text-red-600 font-mono bg-red-50 border border-red-100 px-1 rounded ml-2">
-                                        RAW: {String(tender.status)}
-                                    </span>
                                     <h3 className="text-lg font-bold text-slate-800">{tender.title}</h3>
                                 </div>
 
