@@ -98,7 +98,8 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                         responsibleId: t.responsible_id,
                         createdAt: t.created_at,
                         updatedAt: t.updated_at,
-                        nextSessionDate: t.next_session_date
+                        nextSessionDate: t.next_session_date,
+                        sessionType: t.session_type,
                     }));
                     setTenders(prev => {
                         const merged = mappedTenders.map(cloudTender => {
@@ -225,7 +226,8 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
                 edital_url: data.editalUrl,
                 next_session_date: nextSessionDateISO,
                 responsible_id: data.responsibleId || "1",
-                updated_at: newTender.updatedAt // Sincroniza timestamp para o merge funcionar
+                updated_at: newTender.updatedAt,
+                session_type: data.sessionType
             };
 
             const { error } = await supabase.from('tenders').insert([supabaseData]);
@@ -273,6 +275,7 @@ export function TenderProvider({ children }: { children: React.ReactNode }) {
             if (data.description !== undefined) supabaseData.description = data.description;
             if (data.editalUrl !== undefined) supabaseData.edital_url = data.editalUrl;
             if (data.nextSessionDate !== undefined) supabaseData.next_session_date = data.nextSessionDate;
+            if (data.sessionType !== undefined) supabaseData.session_type = data.sessionType;
 
 
             const { error } = await supabase.from('tenders').update(supabaseData).eq('id', id);

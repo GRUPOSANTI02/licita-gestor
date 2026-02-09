@@ -203,7 +203,10 @@ export default function Dashboard() {
                                                 href={`/tenders/${tender.id}/edit?returnTo=/`}
                                                 className="block bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-400 hover:scale-[1.02] transition-all group"
                                             >
-                                                <h4 className="font-black text-slate-800 leading-tight mb-3 group-hover:text-blue-600 transition-colors uppercase italic text-sm">{tender.title}</h4>
+                                                <h4 className="font-black text-slate-800 leading-tight mb-3 group-hover:text-blue-600 transition-colors uppercase italic text-sm">
+                                                    {tender.sessionType === 'presencial' ? '🏛️ ' : '🖥️ '}
+                                                    {tender.title}
+                                                </h4>
                                                 <div className="flex items-center justify-between pt-3 border-t border-slate-50">
                                                     <div className="flex items-center gap-1.5 text-slate-400">
                                                         <MapPin className="w-3 h-3 text-slate-300" />

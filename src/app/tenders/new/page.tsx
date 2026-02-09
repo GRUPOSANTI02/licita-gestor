@@ -29,6 +29,7 @@ export default function NewTenderPage() {
         editalUrl: "",
         nextSessionDate: "",
         responsibleId: "1",
+        sessionType: "eletronica" as "presencial" | "eletronica",
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +50,7 @@ export default function NewTenderPage() {
                 editalUrl: form.editalUrl,
                 nextSessionDate: form.nextSessionDate,
                 responsibleId: "1",
+                sessionType: form.sessionType,
             };
 
             await addTender(newTender);
@@ -98,6 +100,7 @@ export default function NewTenderPage() {
                                         editalUrl: "",
                                         nextSessionDate: "",
                                         responsibleId: "1",
+                                        sessionType: "eletronica",
                                     });
                                     setSavedTender(null);
                                     setIsSuccess(false);
@@ -156,6 +159,31 @@ export default function NewTenderPage() {
                                         {s === 'pending' ? 'Pendente' : s === 'in_progress' ? 'Em Análise' : s === 'running' ? 'Em Andamento' : s === 'won' ? 'Ganha' : s === 'lost' ? 'Perdida' : 'Não Participou'}
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* TIPO DE SESSÃO */}
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Tipo de Sessão</label>
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setForm({ ...form, sessionType: 'eletronica' })}
+                                    className={`flex-1 px-6 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all border-2 flex items-center justify-center gap-3 ${form.sessionType === 'eletronica'
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                >
+                                    🖥️ Eletrônica
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setForm({ ...form, sessionType: 'presencial' })}
+                                    className={`flex-1 px-6 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all border-2 flex items-center justify-center gap-3 ${form.sessionType === 'presencial'
+                                        ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                >
+                                    🏛️ Presencial
+                                </button>
                             </div>
                         </div>
 

@@ -22,6 +22,7 @@ export interface Tender {
     editalUrl?: string; // Link para o edital (PDF/Site)
     responsibleId: string;
     nextSessionDate?: string; // Data da próxima sessão/retomada
+    sessionType?: 'presencial' | 'eletronica'; // Tipo de sessão
     createdAt: string;
     updatedAt: string;
 }
