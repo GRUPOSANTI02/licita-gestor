@@ -285,12 +285,26 @@ export default function Dashboard() {
             </div>
 
             <div className="hidden md:block space-y-10 pb-20">
-                {/* Header Premium */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                {/* Header com Saudação */}
+                <div className="mb-8 flex justify-between items-end">
                     <div>
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900">Bom dia!</h1>
-                        <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Painel de Controle Estratégico</p>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Olá, Murilo! 👋</h1>
+                        <p className="text-slate-500 font-medium mt-1">Aqui está o resumo das suas licitações hoje.</p>
                     </div>
+                    <button
+                        onClick={() => {
+                            if (confirm("Isso vai apagar os dados salvos NESTE computador e baixar tudo novamente da nuvem. Confirmar?")) {
+                                localStorage.removeItem("licita_gestor_data");
+                                localStorage.removeItem("licita_gestor_atas");
+                                window.location.reload();
+                            }
+                        }}
+                        className="text-[10px] font-bold text-red-500 border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2"
+                    >
+                        🔄 Sincronizar Agora
+                    </button>
+                </div>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="flex gap-3 w-full md:w-auto">
                         <button
                             onClick={() => window.open(generateWeeklySummaryWhatsAppLink(tenders), '_blank')}
@@ -311,6 +325,7 @@ export default function Dashboard() {
 
                 {/* Componente de Dashboard Editável */}
                 <EditableDashboard initialItems={dashboardItems} />
+
             </div>
         </>
     );
