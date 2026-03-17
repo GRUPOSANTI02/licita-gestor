@@ -309,12 +309,12 @@ export default function NewTenderPage() {
                                 />
                             </div>
                             <div className="flex-[1.5]">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Modalidade (Filtro)</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Modalidade</label>
                                 <div className="relative">
                                     <select 
                                         value={searchModalidade}
                                         onChange={(e) => setSearchModalidade(e.target.value)}
-                                        className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm appearance-none cursor-pointer"
+                                        className="w-full h-14 px-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm cursor-pointer hover:border-blue-400 appearance-none"
                                     >
                                         <option value="TODAS">👉 Todas as Modalidades</option>
                                         <option value="Pregão">Pregão Eletrônico / Presencial</option>
@@ -325,8 +325,8 @@ export default function NewTenderPage() {
                                         <option value="Credenciamento">Credenciamento</option>
                                         <option value="Tomada de Preço">Tomada de Preço</option>
                                     </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                        ▼
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                     </div>
                                 </div>
                             </div>
@@ -334,7 +334,7 @@ export default function NewTenderPage() {
                                 <button 
                                     type="submit"
                                     disabled={isLoadingPNCP}
-                                    className="h-14 bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-500/30 w-full md:w-auto mt-auto"
+                                    className="h-14 bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-500/30 w-full md:w-auto"
                                 >
                                     {isLoadingPNCP ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
                                     Buscar
