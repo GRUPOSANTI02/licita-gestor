@@ -56,10 +56,11 @@ export default function NewTenderPage() {
             if (!data.items || data.items.length === 0) {
                 setErrorPNCP("Nenhuma licitação encontrada com esse termo no Mato Grosso do Sul.");
             } else {
-                // Filtro Local Obrigatório de Modalidade (se o usuário escolheu uma)
-                let itemsFiltrados = data.items;
+                // Algumas buscas da API do governo ignoram o param "uf=MS". Forçamos localmente aqui!
+                let itemsFiltrados = (data.items || []).filter((i: any) => i.uf === "MS");
+                
                 if (searchModalidade !== "TODAS") {
-                    itemsFiltrados = data.items.filter((i: any) => 
+                    itemsFiltrados = itemsFiltrados.filter((i: any) => 
                         i.modalidade_licitacao_nome?.toLowerCase().includes(searchModalidade.toLowerCase())
                     );
                 }
