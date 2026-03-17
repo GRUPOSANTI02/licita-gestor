@@ -3,7 +3,7 @@
 import { useTenders } from "@/context/TenderContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Save, DollarSign, CheckCircle2, MessageCircle, Plus, Home, Clock } from "lucide-react";
+import { ArrowLeft, Save, DollarSign, CheckCircle2, MessageCircle, Plus, Home, Clock, Search, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency, maskCurrency, parseCurrencyToNumber } from "@/lib/utils";
 import { generateSingleTenderWhatsAppLink } from "@/lib/whatsapp";
@@ -15,6 +15,91 @@ export default function NewTenderPage() {
 
     const [isSuccess, setIsSuccess] = useState(false);
     const [savedTender, setSavedTender] = useState<any>(null);
+
+    // Integração PNCP
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchNumber, setSearchNumber] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isLoadingPNCP, setIsLoadingPNCP] = useState(false);
+    const [errorPNCP, setErrorPNCP] = useState<string | null>(null);
+    const [successPNCP, setSuccessPNCP] = useState(false);
+
+    const searchPNCP = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        
+        const combinacaoBusca = [searchQuery, searchNumber].filter(Boolean).join(" ");
+
+        if (!combinacaoBusca.trim()) {
+            setErrorPNCP("Digite uma palavra-chave ou o número do pregão para buscar.");
+            return;
+        }
+
+        setIsLoadingPNCP(true);
+        setErrorPNCP(null);
+        setSearchResults([]);
+        setSuccessPNCP(false);
+
+        try {
+            // Adicionado o parâmetro &uf=MS e o número (se preenchido)
+            const url = `https://pncp.gov.br/api/search/?q=${encodeURIComponent(combinacaoBusca)}&tipos_documento=edital&uf=MS&ordenacao=-data_publicacao`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                 throw new Error("Erro na busca do PNCP.");
+            }
+
+            const data = await response.json();
+
+            if (!data.items || data.items.length === 0) {
+                setErrorPNCP("Nenhuma licitação encontrada com esse termo no Mato Grosso do Sul.");
+            } else {
+                setSearchResults(data.items.slice(0, 10)); // Mostra os 10 melhores resultados
+            }
+        } catch (err: any) {
+            console.error("Erro na busca:", err);
+            setErrorPNCP("Serviço do PNCP indisponível no momento.");
+        } finally {
+            setIsLoadingPNCP(false);
+        }
+    };
+
+    const selectPNCPItoFillForm = async (item: any) => {
+        setIsLoadingPNCP(true);
+        setErrorPNCP(null);
+        try {
+            // A API do Governo foi atualizada em 2026. Endpoint antigo (/api/pncp/v1) retorna 301 Moved Permanently.
+            // O endpoint correto para pegar os detalhes da compra é /api/consulta/v1/
+            const url = `https://pncp.gov.br/api/consulta/v1/orgaos/${item.orgao_cnpj}/compras/${item.ano}/${item.numero_sequencial}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Erro ao buscar detalhes da licitação. O servidor do PNCP recusou a conexão.");
+            
+            const data = await response.json();
+
+            setForm(prev => ({
+                ...prev,
+                title: data.objetoCompra || item.title || prev.title,
+                value: data.valorTotalEstimado 
+                    ? new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(data.valorTotalEstimado)
+                    : prev.value,
+                tenderNumber: data.numeroCompra ? `${data.numeroCompra}/${data.anoCompra}` : prev.tenderNumber,
+                agency: data.orgaoEntidade?.razaoSocial || item.orgao_nome || prev.agency,
+                city: item.municipio_nome && item.uf ? `${item.municipio_nome} - ${item.uf}` : prev.city,
+                deadline: data.dataAberturaProposta ? data.dataAberturaProposta.slice(0, 16) : prev.deadline,
+                description: data.modalidadeNome ? `Modalidade: ${data.modalidadeNome}` : prev.description,
+                nextSessionDate: data.dataAberturaProposta ? data.dataAberturaProposta.slice(0, 16) : prev.nextSessionDate
+            }));
+
+            setSearchResults([]);
+            setSearchQuery("");
+            setSuccessPNCP(true);
+            setTimeout(() => setSuccessPNCP(false), 5000);
+        } catch (err: any) {
+            console.error("Erro no preenchimento detalhado:", err);
+            setErrorPNCP(err.message || "Ocorreu um erro inesperado ao importar os dados.");
+        } finally {
+            setIsLoadingPNCP(false);
+        }
+    };
 
     const [form, setForm] = useState({
         tenderNumber: "",
@@ -132,9 +217,105 @@ export default function NewTenderPage() {
             </Link>
 
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10">
-                <div className="mb-10">
+                <div className="mb-6">
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Nova Licitação</h1>
                     <p className="text-slate-500 font-medium">Preencha os detalhes para iniciar o acompanhamento.</p>
+                </div>
+
+                {/* Integração PNCP */}
+                <div className="mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-200 relative overflow-hidden">
+                    {/* Badge de Filtro Regional */}
+                    <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-bl-xl border-l border-b border-blue-200 flex items-center gap-1 shadow-sm">
+                        📍 Filtrado: Somente Mato Grosso do Sul (MS)
+                    </div>
+
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2 mt-2">
+                        <Search className="w-4 h-4" /> Busca Inteligente no PNCP (Preenchimento Automático)
+                    </h3>
+                    
+                    <form onSubmit={searchPNCP} className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-[2]">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Palavra-Chave / Órgão</label>
+                            <input 
+                                type="text" 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Ex: Computador, Merenda, Saúde..."
+                                className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm"
+                            />
+                        </div>
+                        <div className="flex-[1]">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Nº do Pregão (Opcional)</label>
+                            <input 
+                                type="text" 
+                                value={searchNumber}
+                                onChange={(e) => setSearchNumber(e.target.value)}
+                                placeholder="Ex: 001/2026"
+                                className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm"
+                            />
+                        </div>
+                        <div className="flex items-end">
+                            <button 
+                                type="submit"
+                                disabled={isLoadingPNCP}
+                                className="h-14 bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-500/30 w-full md:w-auto"
+                            >
+                                {isLoadingPNCP ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                                Buscar
+                            </button>
+                        </div>
+                    </form>
+
+                    {searchResults.length > 0 && (
+                        <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <div className="bg-slate-100 px-4 py-2 border-b border-slate-200">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Selecione uma licitação abaixo:</span>
+                            </div>
+                            <ul className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                                {searchResults.map((item, index) => (
+                                    <li 
+                                        key={item.id || index}
+                                        onClick={() => selectPNCPItoFillForm(item)}
+                                        className="p-4 hover:bg-blue-50 cursor-pointer transition-colors group"
+                                    >
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex-1">
+                                                <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-700 mb-1">{item.title}</h4>
+                                                
+                                                {/* Exibindo o Objeto/Descrição do Edital */}
+                                                {item.description && (
+                                                    <p className="text-xs text-slate-600 mb-2 italic line-clamp-2 bg-white/50 p-1 rounded">
+                                                        "{item.description}"
+                                                    </p>
+                                                )}
+
+                                                <p className="text-[10px] uppercase font-bold text-slate-400">
+                                                    🏢 {item.orgao_nome} <span className="mx-1">•</span> 📍 {item.municipio_nome}/{item.uf}
+                                                </p>
+                                            </div>
+                                            <div className="shrink-0 bg-slate-100 group-hover:bg-blue-600 group-hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 transition-colors hidden sm:block">
+                                              Selecionar
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {errorPNCP && (
+                        <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-xl flex items-start gap-3 text-sm font-bold border border-red-100">
+                            <AlertCircle className="w-5 h-5 shrink-0" />
+                            <p>{errorPNCP}</p>
+                        </div>
+                    )}
+
+                    {successPNCP && (
+                        <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-xl flex items-center gap-3 text-sm font-bold border border-green-100 animate-in fade-in">
+                            <CheckCircle2 className="w-5 h-5" />
+                            <p>Dados da licitação importados e preenchidos com sucesso!</p>
+                        </div>
+                    )}
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
