@@ -314,7 +314,7 @@ export default function NewTenderPage() {
                                     <select 
                                         value={searchModalidade}
                                         onChange={(e) => setSearchModalidade(e.target.value)}
-                                        className="w-full h-14 px-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm cursor-pointer hover:border-blue-400 appearance-none"
+                                        className="w-full h-14 pl-4 pr-10 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm cursor-pointer hover:border-blue-400 appearance-none truncate"
                                     >
                                         <option value="TODAS">👉 Todas as Modalidades</option>
                                         <option value="Pregão">Pregão Eletrônico / Presencial</option>
@@ -325,8 +325,8 @@ export default function NewTenderPage() {
                                         <option value="Credenciamento">Credenciamento</option>
                                         <option value="Tomada de Preço">Tomada de Preço</option>
                                     </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                     </div>
                                 </div>
                             </div>
