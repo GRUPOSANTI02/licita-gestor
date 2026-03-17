@@ -19,6 +19,7 @@ export default function NewTenderPage() {
     // Integração PNCP
     const [searchQuery, setSearchQuery] = useState("");
     const [searchNumber, setSearchNumber] = useState("");
+    const [searchModalidade, setSearchModalidade] = useState("TODAS");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isLoadingPNCP, setIsLoadingPNCP] = useState(false);
     const [errorPNCP, setErrorPNCP] = useState<string | null>(null);
@@ -53,11 +54,23 @@ export default function NewTenderPage() {
             if (!data.items || data.items.length === 0) {
                 setErrorPNCP("Nenhuma licitação encontrada com esse termo no Mato Grosso do Sul.");
             } else {
-                // Filtro Local Inteligente: Como o painel do Governo retorna muita "sujeira",
-                // nós pontuamos e ordenamos cada licitação baseada em quão bem ela atende o que digitamos.
+                // Filtro Local Obrigatório de Modalidade (se o usuário escolheu uma)
+                let itemsFiltrados = data.items;
+                if (searchModalidade !== "TODAS") {
+                    itemsFiltrados = data.items.filter((i: any) => 
+                        i.modalidade_licitacao_nome?.toLowerCase().includes(searchModalidade.toLowerCase())
+                    );
+                }
+
+                if (itemsFiltrados.length === 0) {
+                     setErrorPNCP(`Nenhum resultado encontrado para a modalidade selecionada (${searchModalidade}). Tente mudar o filtro ou a busca.`);
+                     return;
+                }
+
+                // Filtro Local Inteligente para ranqueamento
                 const termosDaBusca = combinacaoBusca.toLowerCase().replace(/['"-\/]/g, ' ').split(/\s+/).filter(Boolean);
                 
-                const resultadosRanqueados = data.items.map((item: any) => {
+                const resultadosRanqueados = itemsFiltrados.map((item: any) => {
                     let pontuacao = 0;
                     const conteudosParaVasculhar = [
                         item.title?.toLowerCase() || "",
@@ -68,7 +81,7 @@ export default function NewTenderPage() {
                         item.numero_sequencial || ""
                     ].join(" ");
 
-                    // Se a pessoa digitou um número no campo de número, e a licitação tem exatamente esse número, ganha MUITOS pontos.
+                    // Se preencheu o número exato
                     if (searchNumber.trim()) {
                         const partesNum = searchNumber.split("/");
                         if (partesNum[0] && item.numero_sequencial == partesNum[0].replace(/^0+/, '')) {
@@ -86,14 +99,14 @@ export default function NewTenderPage() {
                     return { ...item, _pontuacao: pontuacao };
                 });
 
-                // Removemos resultados que não tem nada a ver (pontuação 0 se tivermos termos longos) e ordena.
+                // Ordena por pontuação
                 let resultadosRefinados = resultadosRanqueados
                     .filter((item: any) => item._pontuacao > 0 || termosDaBusca.length === 0)
                     .sort((a: any, b: any) => b._pontuacao - a._pontuacao);
                 
-                if(resultadosRefinados.length === 0) resultadosRefinados = data.items; // Fallback
+                if(resultadosRefinados.length === 0) resultadosRefinados = itemsFiltrados;
 
-                setSearchResults(resultadosRefinados.slice(0, 10)); // Mostra os 10 melhores cravados
+                setSearchResults(resultadosRefinados.slice(0, 10)); // Mostra os 10 melhores
             }
         } catch (err: any) {
             console.error("Erro na busca:", err);
@@ -273,36 +286,60 @@ export default function NewTenderPage() {
                         <Search className="w-4 h-4" /> Busca Inteligente no PNCP (Preenchimento Automático)
                     </h3>
                     
-                    <form onSubmit={searchPNCP} className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-[2]">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Palavra-Chave / Órgão</label>
-                            <input 
-                                type="text" 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Ex: Computador, Merenda, Saúde..."
-                                className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm"
-                            />
-                        </div>
-                        <div className="flex-[1]">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Nº do Pregão (Opcional)</label>
-                            <input 
-                                type="text" 
-                                value={searchNumber}
-                                onChange={(e) => setSearchNumber(e.target.value)}
-                                placeholder="Ex: 001/2026"
-                                className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm"
-                            />
-                        </div>
-                        <div className="flex items-end">
-                            <button 
-                                type="submit"
-                                disabled={isLoadingPNCP}
-                                className="h-14 bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-500/30 w-full md:w-auto"
-                            >
-                                {isLoadingPNCP ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-                                Buscar
-                            </button>
+                    <form onSubmit={searchPNCP} className="flex flex-col gap-4">
+                        <div className="flex flex-col md:flex-row gap-4 w-full">
+                            <div className="flex-[2]">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Palavra-Chave / Órgão</label>
+                                <input 
+                                    type="text" 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Ex: Nova Alvorada do Sul, Computador..."
+                                    className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm"
+                                />
+                            </div>
+                            <div className="flex-[1]">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Nº (Opcional)</label>
+                                <input 
+                                    type="text" 
+                                    value={searchNumber}
+                                    onChange={(e) => setSearchNumber(e.target.value)}
+                                    placeholder="Ex: 04/2026"
+                                    className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm"
+                                />
+                            </div>
+                            <div className="flex-[1.5]">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Modalidade (Filtro)</label>
+                                <div className="relative">
+                                    <select 
+                                        value={searchModalidade}
+                                        onChange={(e) => setSearchModalidade(e.target.value)}
+                                        className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm transition-all shadow-sm appearance-none cursor-pointer"
+                                    >
+                                        <option value="TODAS">👉 Todas as Modalidades</option>
+                                        <option value="Pregão">Pregão Eletrônico / Presencial</option>
+                                        <option value="Dispensa">Dispensa de Licitação</option>
+                                        <option value="Inexigibilidade">Inexigibilidade</option>
+                                        <option value="Concorrência">Concorrência Pública</option>
+                                        <option value="Chamamento">Chamamento Público</option>
+                                        <option value="Credenciamento">Credenciamento</option>
+                                        <option value="Tomada de Preço">Tomada de Preço</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                        ▼
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-end">
+                                <button 
+                                    type="submit"
+                                    disabled={isLoadingPNCP}
+                                    className="h-14 bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-500/30 w-full md:w-auto mt-auto"
+                                >
+                                    {isLoadingPNCP ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                                    Buscar
+                                </button>
+                            </div>
                         </div>
                     </form>
 
