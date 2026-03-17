@@ -41,8 +41,10 @@ export default function NewTenderPage() {
         setSuccessPNCP(false);
 
         try {
-            // Removendo a ordenação por data para deixar a API usar Relevância (quando possível)
-            const url = `https://pncp.gov.br/api/search/?q=${encodeURIComponent(combinacaoBusca)}&tipos_documento=edital&uf=MS`;
+            // Removendo a ordenação por data para deixar a API usar Relevância,
+            // e forçando trazer os 100 primeiros resultados da busca bruta (tam_pagina) para aumentar as chances 
+            // da nossa IA local filtrar o número perfeito lá no meio.
+            const url = `https://pncp.gov.br/api/search/?q=${encodeURIComponent(combinacaoBusca)}&tipos_documento=edital&uf=MS&tam_pagina=100`;
             const response = await fetch(url);
 
             if (!response.ok) {
