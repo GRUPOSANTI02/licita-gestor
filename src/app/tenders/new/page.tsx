@@ -82,17 +82,27 @@ export default function NewTenderPage() {
                     ].join(" ");
 
                     // Se a pessoa digitou um número exato no filtro, nós queremos SER RIGOROSOS.
-                    // O Governo manda muito lixo porque confunde número de pregão com datas (ex: 04/04/2026).
+                    // O Governo manda muito lixo, e a variável "numero_sequencial" da API na verdade
+                    // reflete a "ordem de envio do órgão" e não o número escrito na capa do edital!
+                    // Por isso checamos no 'title' se o número do pregao consta lá.
                     if (searchNumber.trim()) {
-                        const partesNum = searchNumber.split("/");
-                        const reqSeq = partesNum[0].replace(/^0+/, ''); // Ex: "04" vira "4", "005" vira "5"
+                        const partesNum = searchNumber.trim().split("/"); // ex: 04/2026
+                        const numDigitado = partesNum[0].replace(/^0+/, ''); // "4"
+                        const anoDigitado = partesNum[1] || "";
+
+                        // Vamos procurar 04 ou 4 ou 004 no título
+                        const regexNumNoTitulo = new RegExp(`(?:nº|nr|n|numero|número|edital).*?\\b0*${numDigitado}\\b`, "i");
+
+                        const matchTitle = regexNumNoTitulo.test(item.title);
+                        const matchAno = anoDigitado ? item.title?.includes(anoDigitado) : true;
                         
-                        // Se for exato o que pediu: super bônus no rank!
-                        if (reqSeq && item.numero_sequencial == reqSeq) {
+                        // Também validamos numero_sequencial ou numero_processo caso esteja embutido lá por chance
+                        const matchSeq = (item.numero_sequencial == numDigitado) || (item.numero_processo == numDigitado);
+
+                        if ((matchTitle && matchAno) || matchSeq) {
                             pontuacao += 1000; 
                         } else {
-                            // Se a pessoa pediu um número e a licitação retornado pelo governo NÃO é esse número, 
-                            // a gente pune essa licitação jogando ela no ralo das pontuações negativas (-1000).
+                            // Pune as licitações que a API jogou só porque achou a data '04' perdida na descrição.
                             pontuacao -= 1000;
                         }
                     }
