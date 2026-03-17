@@ -40,8 +40,8 @@ export default function NewTenderPage() {
         setSuccessPNCP(false);
 
         try {
-            // Adicionado o parâmetro &uf=MS e o número (se preenchido)
-            const url = `https://pncp.gov.br/api/search/?q=${encodeURIComponent(combinacaoBusca)}&tipos_documento=edital&uf=MS&ordenacao=-data_publicacao`;
+            // Removendo a ordenação por data para deixar a API usar Relevância (quando possível)
+            const url = `https://pncp.gov.br/api/search/?q=${encodeURIComponent(combinacaoBusca)}&tipos_documento=edital&uf=MS`;
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -53,7 +53,47 @@ export default function NewTenderPage() {
             if (!data.items || data.items.length === 0) {
                 setErrorPNCP("Nenhuma licitação encontrada com esse termo no Mato Grosso do Sul.");
             } else {
-                setSearchResults(data.items.slice(0, 10)); // Mostra os 10 melhores resultados
+                // Filtro Local Inteligente: Como o painel do Governo retorna muita "sujeira",
+                // nós pontuamos e ordenamos cada licitação baseada em quão bem ela atende o que digitamos.
+                const termosDaBusca = combinacaoBusca.toLowerCase().replace(/['"-\/]/g, ' ').split(/\s+/).filter(Boolean);
+                
+                const resultadosRanqueados = data.items.map((item: any) => {
+                    let pontuacao = 0;
+                    const conteudosParaVasculhar = [
+                        item.title?.toLowerCase() || "",
+                        item.description?.toLowerCase() || "",
+                        item.orgao_nome?.toLowerCase() || "",
+                        item.municipio_nome?.toLowerCase() || "",
+                        item.ano || "",
+                        item.numero_sequencial || ""
+                    ].join(" ");
+
+                    // Se a pessoa digitou um número no campo de número, e a licitação tem exatamente esse número, ganha MUITOS pontos.
+                    if (searchNumber.trim()) {
+                        const partesNum = searchNumber.split("/");
+                        if (partesNum[0] && item.numero_sequencial == partesNum[0].replace(/^0+/, '')) {
+                            pontuacao += 50; 
+                        }
+                    }
+
+                    // Vasculha palavra por palavra
+                    termosDaBusca.forEach(termo => {
+                        if (conteudosParaVasculhar.includes(termo)) {
+                            pontuacao += 10;
+                        }
+                    });
+
+                    return { ...item, _pontuacao: pontuacao };
+                });
+
+                // Removemos resultados que não tem nada a ver (pontuação 0 se tivermos termos longos) e ordena.
+                let resultadosRefinados = resultadosRanqueados
+                    .filter((item: any) => item._pontuacao > 0 || termosDaBusca.length === 0)
+                    .sort((a: any, b: any) => b._pontuacao - a._pontuacao);
+                
+                if(resultadosRefinados.length === 0) resultadosRefinados = data.items; // Fallback
+
+                setSearchResults(resultadosRefinados.slice(0, 10)); // Mostra os 10 melhores cravados
             }
         } catch (err: any) {
             console.error("Erro na busca:", err);
