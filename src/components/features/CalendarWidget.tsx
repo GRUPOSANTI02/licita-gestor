@@ -129,7 +129,7 @@ export function CalendarWidget() {
                                         `}
                                     >
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] leading-tight font-black uppercase tracking-tight">
+                                            <span className="text-[9px] leading-tight font-black uppercase tracking-tight line-clamp-3 text-ellipsis">
                                                 {t.sessionType === 'presencial' ? '🏛️ ' : '🖥️ '}
                                                 {t.city ? `${t.city} - ${t.title}` : t.title}
                                             </span>

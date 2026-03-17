@@ -173,7 +173,7 @@ export function MobileCalendarAgenda() {
                                                 </div>
                                             </div>
 
-                                            <h4 className="font-black text-white text-sm uppercase leading-tight mb-2 pr-6">
+                                            <h4 className="font-black text-white text-sm uppercase leading-tight mb-2 pr-6 line-clamp-3">
                                                 {tender.sessionType === 'presencial' ? '🏛️ ' : '🖥️ '}
                                                 {tender.title}
                                             </h4>
