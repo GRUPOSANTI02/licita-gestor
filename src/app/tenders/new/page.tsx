@@ -81,15 +81,23 @@ export default function NewTenderPage() {
                         item.numero_sequencial || ""
                     ].join(" ");
 
-                    // Se preencheu o número exato
+                    // Se a pessoa digitou um número exato no filtro, nós queremos SER RIGOROSOS.
+                    // O Governo manda muito lixo porque confunde número de pregão com datas (ex: 04/04/2026).
                     if (searchNumber.trim()) {
                         const partesNum = searchNumber.split("/");
-                        if (partesNum[0] && item.numero_sequencial == partesNum[0].replace(/^0+/, '')) {
-                            pontuacao += 50; 
+                        const reqSeq = partesNum[0].replace(/^0+/, ''); // Ex: "04" vira "4", "005" vira "5"
+                        
+                        // Se for exato o que pediu: super bônus no rank!
+                        if (reqSeq && item.numero_sequencial == reqSeq) {
+                            pontuacao += 1000; 
+                        } else {
+                            // Se a pessoa pediu um número e a licitação retornado pelo governo NÃO é esse número, 
+                            // a gente pune essa licitação jogando ela no ralo das pontuações negativas (-1000).
+                            pontuacao -= 1000;
                         }
                     }
 
-                    // Vasculha palavra por palavra
+                    // Vasculha palavra por palavra da Palavra-Chave
                     termosDaBusca.forEach(termo => {
                         if (conteudosParaVasculhar.includes(termo)) {
                             pontuacao += 10;
